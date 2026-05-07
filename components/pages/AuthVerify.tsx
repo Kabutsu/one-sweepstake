@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function AuthVerify() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const verifyMagicLink = trpc.auth.verifyMagicLink.useMutation();
@@ -22,7 +21,7 @@ export default function AuthVerify() {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         email = payload.email;
-      } catch (e) {
+      } catch {
         setError("Invalid token format");
         return;
       }
@@ -40,9 +39,12 @@ export default function AuthVerify() {
 
     verifyMagicLink
       .mutateAsync({ token, email })
-      .then((result) => {
-        utils.auth.me.invalidate();
-        if (result.isNewUser) {
+      .then(async (result) => {
+        // Refetch user data and wait for it to complete
+        await utils.auth.me.refetch();
+
+        // Navigate based on whether profile is complete
+        if (result.isNewUser || !result.user.displayName) {
           navigate("/auth/setup");
         } else {
           navigate("/dashboard");
