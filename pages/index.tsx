@@ -28,25 +28,15 @@ export default function Home() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />}
-        />
+        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
         <Route path="/auth/verify" element={<AuthVerify />} />
         <Route
           path="/auth/setup"
           element={
-            user && !user.displayName ? (
-              <ProfileSetup />
-            ) : (
-              <Navigate to="/dashboard" replace />
-            )
+            user && !user.displayName ? <ProfileSetup /> : <Navigate to="/dashboard" replace />
           }
         />
-        <Route
-          path="/dashboard"
-          element={user ? <Dashboard /> : <Navigate to="/" replace />}
-        />
+        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

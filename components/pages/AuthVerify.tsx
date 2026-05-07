@@ -31,6 +31,7 @@ export default function AuthVerify() {
       .catch((err) => {
         setError(err.message || "Invalid or expired link");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   if (error) {
@@ -55,10 +56,7 @@ export default function AuthVerify() {
             </div>
             <h2 className="text-2xl font-bold mb-4">Verification failed</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-            <button
-              onClick={() => navigate("/")}
-              className="btn-primary"
-            >
+            <button onClick={() => navigate("/")} className="btn-primary">
               Back to sign in
             </button>
           </div>

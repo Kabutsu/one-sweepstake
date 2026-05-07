@@ -35,9 +35,7 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold text-primary">One Sweepstake</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {user.displayName}
-              </span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{user.displayName}</span>
               <button
                 onClick={handleLogout}
                 disabled={logout.isPending}

@@ -40,7 +40,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-2xl font-bold mb-4">Check your email</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We've sent a magic link to <strong>{email}</strong>
+              We&apos;ve sent a magic link to <strong>{email}</strong>
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500">
               Click the link in the email to sign in. The link will expire in 30 minutes.
@@ -102,7 +102,7 @@ export default function LandingPage() {
 
         <div className="mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
           <p className="text-xs text-center text-gray-500">
-            We'll send you a magic link to sign in. No password required.
+            We&apos;ll send you a magic link to sign in. No password required.
           </p>
         </div>
       </div>

@@ -26,9 +26,7 @@ export default function ProfileSetup() {
       <div className="card max-w-md w-full p-8 animate-slide-up">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome!</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Let's set up your profile
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Let&apos;s set up your profile</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -49,7 +47,7 @@ export default function ProfileSetup() {
               className="input"
             />
             <p className="mt-2 text-xs text-gray-500">
-              This is how you'll appear to other participants
+              This is how you&apos;ll appear to other participants
             </p>
           </div>
 

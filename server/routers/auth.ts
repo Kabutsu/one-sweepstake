@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "./trpc";
+import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -7,10 +7,7 @@ import { randomBytes } from "crypto";
 import { createToken, setAuthCookie, clearAuthCookie } from "@/lib/auth";
 import nodemailer from "nodemailer";
 
-const magicLinkTokens = new Map<
-  string,
-  { email: string; createdAt: number }
->();
+const magicLinkTokens = new Map<string, { email: string; createdAt: number }>();
 
 const TOKEN_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
@@ -79,10 +76,7 @@ export const authRouter = router({
 
       magicLinkTokens.delete(input.token);
 
-      let [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, tokenData.email));
+      let [user] = await db.select().from(users).where(eq(users.email, tokenData.email));
 
       const isNewUser = !user;
 
