@@ -2,7 +2,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { SignJWT, jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
-import { cookies } from "next/headers";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "fallback-secret-key");
 const TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
@@ -31,10 +30,7 @@ export async function verifyToken(token: string): Promise<string | null> {
   }
 }
 
-export async function getAuthUser(): Promise<AuthUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth-token")?.value;
-
+export async function getAuthUser(token?: string): Promise<AuthUser | null> {
   if (!token) return null;
 
   const userId = await verifyToken(token);
@@ -51,18 +47,12 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   };
 }
 
-export async function setAuthCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set("auth-token", token, {
+export function getAuthCookieOptions(maxAge: number = TOKEN_MAX_AGE) {
+  return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: TOKEN_MAX_AGE,
+    sameSite: "lax" as const,
+    maxAge,
     path: "/",
-  });
-}
-
-export async function clearAuthCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete("auth-token");
+  };
 }

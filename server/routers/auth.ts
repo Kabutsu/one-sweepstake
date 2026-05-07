@@ -4,8 +4,9 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { createToken, setAuthCookie, clearAuthCookie } from "@/lib/auth";
+import { createToken, getAuthCookieOptions } from "@/lib/auth";
 import nodemailer from "nodemailer";
+import { TRPCError } from "@trpc/server";
 
 const magicLinkTokens = new Map<string, { email: string; createdAt: number }>();
 
@@ -62,16 +63,22 @@ export const authRouter = router({
 
   verifyMagicLink: publicProcedure
     .input(z.object({ token: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const tokenData = magicLinkTokens.get(input.token);
 
       if (!tokenData) {
-        throw new Error("Invalid or expired token");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired token",
+        });
       }
 
       if (Date.now() - tokenData.createdAt > TOKEN_EXPIRY) {
         magicLinkTokens.delete(input.token);
-        throw new Error("Token expired");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Token expired",
+        });
       }
 
       magicLinkTokens.delete(input.token);
@@ -93,7 +100,22 @@ export const authRouter = router({
       }
 
       const authToken = await createToken(user.id);
-      await setAuthCookie(authToken);
+
+      // Set cookie via Next.js res object
+      ctx.res?.setHeader(
+        "Set-Cookie",
+        `auth-token=${authToken}; ${Object.entries(getAuthCookieOptions())
+          .map(([key, value]) => {
+            if (key === "maxAge") return `Max-Age=${value}`;
+            if (key === "httpOnly") return value ? "HttpOnly" : "";
+            if (key === "secure") return value ? "Secure" : "";
+            if (key === "sameSite") return `SameSite=${value}`;
+            if (key === "path") return `Path=${value}`;
+            return "";
+          })
+          .filter(Boolean)
+          .join("; ")}`
+      );
 
       return {
         success: true,
@@ -122,8 +144,9 @@ export const authRouter = router({
     return ctx.user;
   }),
 
-  logout: protectedProcedure.mutation(async () => {
-    await clearAuthCookie();
+  logout: protectedProcedure.mutation(async ({ ctx }) => {
+    // Clear cookie via Next.js res object
+    ctx.res?.setHeader("Set-Cookie", `auth-token=; Path=/; HttpOnly; SameSite=lax; Max-Age=0`);
     return { success: true };
   }),
 });

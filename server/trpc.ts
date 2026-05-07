@@ -1,17 +1,18 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import { type FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
 import { db } from "@/db";
 import { getAuthUser, type AuthUser } from "@/lib/auth";
 
-export async function createContext(opts?: FetchCreateContextFnOptions) {
-  const user = await getAuthUser();
+export async function createContext(opts?: CreateNextContextOptions) {
+  const token = opts?.req.cookies["auth-token"];
+  const user = await getAuthUser(token);
 
   return {
     db,
     user,
     req: opts?.req,
-    resHeaders: opts?.resHeaders,
+    res: opts?.res,
   };
 }
 
