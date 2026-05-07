@@ -11,20 +11,30 @@ export default function AuthVerify() {
   const utils = trpc.useUtils();
 
   useEffect(() => {
-    // Supabase puts the token in query params or hash
-    const token =
-      searchParams.get("token") || window.location.hash.split("access_token=")[1]?.split("&")[0];
-    const email = searchParams.get("email");
-    const type = searchParams.get("type");
+    // Supabase puts auth data in the URL hash
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const token = hashParams.get("access_token");
+    const type = hashParams.get("type");
 
-    // For Supabase email OTP, we need both token and type=email
-    if (!token || type !== "email") {
-      setError("Missing or invalid verification token");
+    // Extract email from the JWT token (it's in the payload)
+    let email = "";
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        email = payload.email;
+      } catch (e) {
+        setError("Invalid token format");
+        return;
+      }
+    }
+
+    if (!token || !email) {
+      setError("Missing verification token or email");
       return;
     }
 
-    if (!email) {
-      setError("Missing email address");
+    if (type !== "magiclink") {
+      setError("Invalid authentication type");
       return;
     }
 
@@ -42,7 +52,7 @@ export default function AuthVerify() {
         setError(err.message || "Invalid or expired link");
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
   if (error) {
     return (
