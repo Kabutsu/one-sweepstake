@@ -66,6 +66,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Architecture
 
 **Monorepo with Single Deployment**
+
 - Use Next.js as a deployment wrapper and monorepo structure, but implement the entire frontend as a pure Single Page Application (SPA)
 - Single `/pages/index.tsx` entry point that loads the React application
 - React Router handles all client-side routing within that single page
@@ -74,6 +75,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - This approach provides monorepo/monodeployment benefits while avoiding Next.js SSR complications (layouts, server/client boundaries, sluggish feel)
 
 **Technology Stack**
+
 - Frontend: React with React Router for client-side routing
 - Backend: Next.js API routes with tRPC for type-safe API calls
 - Database: Supabase PostgreSQL with Drizzle ORM
@@ -84,6 +86,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - Deployment: Vercel
 
 **Authentication Flow**
+
 1. User enters email on landing page
 2. Magic link sent via SMTP2Go
 3. User clicks link → authenticates → checks if profile exists
@@ -95,6 +98,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 9. Secure logout that clears session on both client and server
 
 **Database Schema**
+
 - Use the existing Drizzle schema (already provided in `db/schema.ts`)
 - Tournaments table: stores World Cup 2026 data (API ID, dates, seeding config)
 - Sweepstakes table: each instance of a sweepstake group
@@ -106,6 +110,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - Tournament seeding data stored in `seedingConfig` JSONB field for MVP (manual DB entry)
 
 **Routing Structure**
+
 - `/` - Landing page (if not logged in) or redirect to dashboard (if logged in)
 - `/auth/verify` - Magic link destination for email verification
 - `/auth/setup` - Profile setup for new users
@@ -119,6 +124,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Football Data API Integration
 
 **Match Data Fetching**
+
 - Background job (cron or interval) polls Football Data API every 1-2 minutes during active match times
 - Store raw match data in `match_cache` table with `lastFetchedAt` timestamp
 - Cache responses to avoid rate limits
@@ -126,12 +132,14 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - Match states: SCHEDULED, IN_PLAY, PAUSED, FINISHED, etc.
 
 **Team Elimination Logic**
+
 - After group stage: teams not in top 2 of their group are marked eliminated
 - After knockout rounds: losing team is marked eliminated
 - Elimination status computed from match results, not manually set
 - Display elimination status on participant's team assignments
 
 **Tournament Data Structure**
+
 - 2026 World Cup: 48 teams, 12 groups of 4 teams each
 - Group stage: 3 matches per team (round-robin within group)
 - Top 2 from each group advance to round of 32 knockout stage
@@ -140,6 +148,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Draw Algorithm
 
 **Seeded Random Draw**
+
 - Participants divided into pots based on number of teams and seeding data
 - Each pot contains teams of similar strength (based on seeding config)
 - Teams randomly assigned to participants, drawing from pots in order
@@ -152,10 +161,12 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Real-time Chat
 
 **Implementation Options**
+
 1. **Socket.io**: Custom WebSocket server integrated with Next.js API
 2. **Supabase Realtime**: Use existing Supabase infrastructure for subscriptions
 
 **Chat Features**
+
 - Messages scoped to individual sweepstake (one chat room per sweepstake)
 - Messages stored in `chat_messages` table
 - Display user display name with each message
@@ -168,6 +179,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Leaderboard and Standings
 
 **Leaderboard Logic**
+
 - Show all participants in the sweepstake
 - Group by status: "Still In" vs. "Eliminated"
 - "Still In" = at least one assigned team is not eliminated
@@ -177,6 +189,7 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - Optional: show 2nd place as the person with the finalist who didn't win
 
 **Match Display**
+
 - Show live scores for ongoing matches
 - Show results for completed matches
 - Show schedule for upcoming matches
@@ -187,12 +200,14 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 ### Error Handling and Edge Cases
 
 **Authentication Edge Cases**
+
 - Expired magic links: show error, offer to resend
 - Invalid tokens: redirect to login
 - Session expiry during usage: show re-authentication prompt
 - Multiple browser tabs: sync login state across tabs (use localStorage events)
 
 **Sweepstake Edge Cases**
+
 - Attempting to join after draw: show error message
 - Attempting to join full sweepstake: show error message
 - Invalid join codes: show error message
@@ -200,11 +215,13 @@ One Sweepstake is a streamlined, mobile-first Single Page Application (SPA) that
 - Duplicate team assignments: prevented by unique constraint in DB
 
 **API Failures**
+
 - Football Data API down: show cached data with "last updated" timestamp
 - Rate limit exceeded: extend polling interval, show warning
 - Invalid API response: log error, continue showing cached data
 
 **Network Issues**
+
 - Lost WebSocket connection: attempt reconnection with exponential backoff
 - Failed tRPC calls: show error toast, allow retry
 - Slow loading: show skeleton states and loading indicators
@@ -218,6 +235,7 @@ Tests should validate external behavior and interfaces, not implementation detai
 ### Modules to Test
 
 **1. Draw Algorithm**
+
 - Test that all participants receive teams
 - Test that seeding distribution is balanced
 - Test edge cases (odd number of participants, insufficient teams, etc.)
@@ -225,12 +243,14 @@ Tests should validate external behavior and interfaces, not implementation detai
 - Mock database calls and test pure logic
 
 **2. Team Elimination Logic**
+
 - Test that teams are correctly marked eliminated based on match results
 - Test group stage elimination (not in top 2)
 - Test knockout elimination (loss in single-elimination match)
 - Mock match cache data and verify elimination status computation
 
 **3. Authentication Flow**
+
 - Test magic link generation and verification
 - Test session creation and persistence
 - Test logout clears session properly
@@ -238,12 +258,14 @@ Tests should validate external behavior and interfaces, not implementation detai
 - Mock email sending and token generation
 
 **4. tRPC API Endpoints**
+
 - Test each mutation and query with valid inputs
 - Test error cases (unauthorized, invalid data, etc.)
 - Test authorization (e.g., only creator can trigger draw)
 - Use tRPC's built-in testing utilities
 
 **5. Match Data Sync**
+
 - Test that Football Data API responses are correctly parsed and stored
 - Test cache invalidation logic
 - Test handling of API errors
@@ -306,6 +328,7 @@ Tests should validate external behavior and interfaces, not implementation detai
 ### MVP Success Criteria
 
 The MVP is successful if:
+
 1. Users can create and join sweepstakes before the 2026 World Cup begins
 2. The draw algorithm fairly distributes teams
 3. Match scores update automatically within 1-2 minutes of real results
@@ -339,6 +362,7 @@ The MVP is successful if:
 ### Data Seeding for MVP
 
 For the MVP launch, manually insert into the database:
+
 - Tournament record for 2026 FIFA World Cup (API ID from Football Data, dates, team count)
 - Seeding configuration JSON mapping the 48 teams to tiers/ratings (can be based on FIFA rankings)
 - This avoids building an admin panel before the MVP is validated
