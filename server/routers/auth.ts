@@ -31,17 +31,21 @@ export const authRouter = router({
   verifyMagicLink: publicProcedure
     .input(z.object({ token: z.string(), email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-      // Verify the OTP token with Supabase
-      const { data: verifyData, error: verifyError } = await supabaseAdmin.auth.verifyOtp({
-        email: input.email,
-        token: input.token,
-        type: "email",
-      });
+      // Verify the access token with Supabase
+      const { data: userData, error: verifyError } = await supabaseAdmin.auth.getUser(input.token);
 
-      if (verifyError || !verifyData.user) {
+      if (verifyError || !userData.user) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Invalid or expired token",
+        });
+      }
+
+      // Verify the email matches
+      if (userData.user.email?.toLowerCase() !== input.email.toLowerCase()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Email mismatch",
         });
       }
 
