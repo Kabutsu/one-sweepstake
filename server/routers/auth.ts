@@ -3,102 +3,69 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { randomBytes } from "crypto";
 import { createToken, getAuthCookieOptions } from "@/lib/auth";
-import nodemailer from "nodemailer";
+import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
-
-const magicLinkTokens = new Map<string, { email: string; createdAt: number }>();
-
-const TOKEN_EXPIRY = 30 * 60 * 1000; // 30 minutes
-
-async function sendMagicLinkEmail(email: string, token: string) {
-  const transporter = nodemailer.createTransport({
-    host: "mail.smtp2go.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  const magicLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify?token=${token}`;
-
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || "noreply@onesweepstake.com",
-    to: email,
-    subject: "Sign in to One Sweepstake",
-    html: `
-      <h1>Sign in to One Sweepstake</h1>
-      <p>Click the link below to sign in:</p>
-      <a href="${magicLink}">${magicLink}</a>
-      <p>This link will expire in 30 minutes.</p>
-    `,
-  });
-}
 
 export const authRouter = router({
   sendMagicLink: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
-      const token = randomBytes(32).toString("hex");
-
-      magicLinkTokens.set(token, {
+      const { error } = await supabaseAdmin.auth.signInWithOtp({
         email: input.email.toLowerCase(),
-        createdAt: Date.now(),
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify`,
+        },
       });
 
-      // Clean up expired tokens
-      for (const [key, value] of magicLinkTokens.entries()) {
-        if (Date.now() - value.createdAt > TOKEN_EXPIRY) {
-          magicLinkTokens.delete(key);
-        }
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to send magic link: ${error.message}`,
+        });
       }
-
-      await sendMagicLinkEmail(input.email, token);
 
       return { success: true };
     }),
 
   verifyMagicLink: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({ token: z.string(), email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-      const tokenData = magicLinkTokens.get(input.token);
+      // Verify the OTP token with Supabase
+      const { data: verifyData, error: verifyError } = await supabaseAdmin.auth.verifyOtp({
+        email: input.email,
+        token: input.token,
+        type: "email",
+      });
 
-      if (!tokenData) {
+      if (verifyError || !verifyData.user) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Invalid or expired token",
         });
       }
 
-      if (Date.now() - tokenData.createdAt > TOKEN_EXPIRY) {
-        magicLinkTokens.delete(input.token);
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Token expired",
-        });
-      }
+      const email = input.email.toLowerCase();
 
-      magicLinkTokens.delete(input.token);
-
-      let [user] = await db.select().from(users).where(eq(users.email, tokenData.email));
+      // Check if user exists in our database
+      let [user] = await db.select().from(users).where(eq(users.email, email));
 
       const isNewUser = !user;
 
       if (!user) {
+        // Create new user in our database
         const userId = crypto.randomUUID();
         [user] = await db
           .insert(users)
           .values({
             id: userId,
-            email: tokenData.email,
+            email,
             displayName: null,
           })
           .returning();
       }
 
+      // Create our own JWT token
       const authToken = await createToken(user.id);
 
       // Set cookie via Next.js res object

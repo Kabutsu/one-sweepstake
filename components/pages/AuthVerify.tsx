@@ -11,15 +11,25 @@ export default function AuthVerify() {
   const utils = trpc.useUtils();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    // Supabase puts the token in query params or hash
+    const token =
+      searchParams.get("token") || window.location.hash.split("access_token=")[1]?.split("&")[0];
+    const email = searchParams.get("email");
+    const type = searchParams.get("type");
 
-    if (!token) {
-      setError("Missing verification token");
+    // For Supabase email OTP, we need both token and type=email
+    if (!token || type !== "email") {
+      setError("Missing or invalid verification token");
+      return;
+    }
+
+    if (!email) {
+      setError("Missing email address");
       return;
     }
 
     verifyMagicLink
-      .mutateAsync({ token })
+      .mutateAsync({ token, email })
       .then((result) => {
         utils.auth.me.invalidate();
         if (result.isNewUser) {
