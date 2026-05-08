@@ -11,10 +11,15 @@ export const authRouter = router({
   sendMagicLink: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
+      // Build redirect URL dynamically to support Vercel preview deployments
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
       const { error } = await supabaseAdmin.auth.signInWithOtp({
         email: input.email.toLowerCase(),
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify`,
+          emailRedirectTo: `${baseUrl}/auth/verify`,
         },
       });
 
