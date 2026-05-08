@@ -69,7 +69,7 @@ export default function ProfileSetup() {
       <div className="card max-w-md w-full p-8 animate-slide-up">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2 text-text-light dark:text-text-dark">Welcome!</h1>
-          <p className="text-gray-600 dark:text-gray-400">Let's set up your profile</p>
+          <p className="text-gray-600 dark:text-gray-400">Let&apos;s set up your profile</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,7 +95,7 @@ export default function ProfileSetup() {
             />
             <div className="flex justify-between items-start mt-2">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                This is how you'll appear to other participants
+                This is how you&apos;ll appear to other participants
               </p>
               <span
                 className={`text-xs font-medium ${displayNameLength > 45 ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}
