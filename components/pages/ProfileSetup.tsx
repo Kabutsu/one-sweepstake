@@ -59,7 +59,8 @@ export default function ProfileSetup() {
     }
   };
 
-  const error = validationError || (setupProfile.isError ? "Failed to save profile. Please try again." : null);
+  const error =
+    validationError || (setupProfile.isError ? "Failed to save profile. Please try again." : null);
   const displayNameLength = displayName.length;
   const isButtonDisabled = setupProfile.isPending || !displayName.trim();
 
@@ -73,7 +74,10 @@ export default function ProfileSetup() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="displayName" className="block text-sm font-semibold mb-3 text-text-light dark:text-text-dark">
+            <label
+              htmlFor="displayName"
+              className="block text-sm font-semibold mb-3 text-text-light dark:text-text-dark"
+            >
               Display name
             </label>
             <input
@@ -93,7 +97,9 @@ export default function ProfileSetup() {
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 This is how you'll appear to other participants
               </p>
-              <span className={`text-xs font-medium ${displayNameLength > 45 ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}>
+              <span
+                className={`text-xs font-medium ${displayNameLength > 45 ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}
+              >
                 {displayNameLength}/50
               </span>
             </div>
@@ -124,4 +130,3 @@ export default function ProfileSetup() {
     </div>
   );
 }
-
