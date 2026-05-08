@@ -100,8 +100,22 @@ export const authRouter = router({
     }),
 
   setupProfile: protectedProcedure
-    .input(z.object({ displayName: z.string().min(1).max(50) }))
+    .input(z.object({ displayName: z.string().min(1).max(50).trim() }))
     .mutation(async ({ ctx, input }) => {
+      // Check if display name is already taken
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.displayName, input.displayName))
+        .then((rows) => rows[0]);
+
+      if (existingUser && existingUser.id !== ctx.user.id) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This display name is already taken. Please choose another one.",
+        });
+      }
+
       const [updatedUser] = await db
         .update(users)
         .set({ displayName: input.displayName })
@@ -114,6 +128,18 @@ export const authRouter = router({
   me: publicProcedure.query(async ({ ctx }) => {
     return ctx.user;
   }),
+
+  isDisplayNameAvailable: publicProcedure
+    .input(z.object({ displayName: z.string().min(1).max(50) }))
+    .query(async ({ input }) => {
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.displayName, input.displayName))
+        .then((rows) => rows[0]);
+
+      return { available: !existingUser };
+    }),
 
   logout: protectedProcedure.mutation(async ({ ctx }) => {
     // Clear cookie via Next.js res object
