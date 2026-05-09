@@ -1,8 +1,15 @@
+import { useNavigate } from "react-router-dom";
+
 export default function ActionBar() {
+  const navigate = useNavigate();
+
   return (
     <div className="glass p-5 shadow-xl rounded-2xl border border-white/20 dark:border-white/10">
       <div className="flex flex-col sm:flex-row gap-4">
-        <button className="flex-1 bg-gradient-to-r from-primary to-primary-600 text-white py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:shadow-xl transition-all duration-300 font-semibold">
+        <button
+          onClick={() => navigate("/sweepstake/create")}
+          className="flex-1 bg-gradient-to-r from-primary to-primary-600 text-white py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:shadow-xl transition-all duration-300 font-semibold"
+        >
           <svg
             className="w-5 h-5"
             fill="none"
