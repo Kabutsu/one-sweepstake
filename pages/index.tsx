@@ -8,7 +8,7 @@ import AuthVerify from "@/components/pages/AuthVerify";
 import ProfileSetup from "@/components/pages/ProfileSetup";
 import Dashboard from "@/components/pages/dashboard";
 
-import Layout from '@/components/ui/Layout';
+import Layout from "@/components/ui/Layout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function Home() {
@@ -40,7 +40,7 @@ export default function Home() {
             user && !user.displayName ? <ProfileSetup /> : <Navigate to="/dashboard" replace />
           }
         />
-        <Route path="/*" element={<Navigate to={user ? '/dashboard' : '/'} replace />} />
+        <Route path="/*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" replace />} />
         </Route>

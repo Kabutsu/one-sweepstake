@@ -27,26 +27,34 @@ export default function Dashboard() {
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1">
-          Welcome{displaySweepstakes.length ? ' back' : ''}, {user.displayName}
+          Welcome{displaySweepstakes.length ? " back" : ""}, {user.displayName}
         </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Here&apos;s what&apos;s happening with your sweepstakes
         </p>
       </div>
-      
+
       <LiveMatchesSection matches={[match]} />
 
       <ActionBar />
 
       <div>
-        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-          My Sweepstakes
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Sweepstakes</h2>
         {displaySweepstakes.length === 0 ? (
           <div className="glass p-12 text-center shadow-2xl rounded-2xl border-2 border-dashed border-gray-300/50 dark:border-gray-700/50">
             <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              <svg
+                className="w-10 h-10 text-primary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">

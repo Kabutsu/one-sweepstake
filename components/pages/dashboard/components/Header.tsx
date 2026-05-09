@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
-import { trpc } from '@/lib/trpc';
-import { AuthUser } from '@/lib/auth';
+import { trpc } from "@/lib/trpc";
+import { AuthUser } from "@/lib/auth";
 
-import ThemeToggle from '@/components/ui/ThemeToggle';
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 type Props = {
   user: AuthUser;
-}
+};
 
 function Initials(name: string | null) {
   if (!name) return "🥸";
@@ -44,13 +44,19 @@ export default function AppHeader({ user }: Props) {
               <span className="text-white font-black text-lg">OS</span>
             </div>
             <div className="hidden sm:block">
-              <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight min-w-max">ONE SWEEPSTAKE</div>
+              <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight min-w-max">
+                ONE SWEEPSTAKE
+              </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">World Cup 2026</div>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            <button onClick={handleLogout} disabled={logout.isPending} className="btn-secondary text-sm px-4 py-2 rounded-sm transition-all">
+            <button
+              onClick={handleLogout}
+              disabled={logout.isPending}
+              className="btn-secondary text-sm px-4 py-2 rounded-sm transition-all"
+            >
               {logout.isPending ? "..." : "Logout"}
             </button>
           </div>
