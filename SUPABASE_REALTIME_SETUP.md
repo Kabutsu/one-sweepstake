@@ -9,11 +9,13 @@ The `chat_messages` table is already defined in the schema. To enable Realtime s
 ### 1. Enable Realtime for the chat_messages table
 
 In Supabase Dashboard:
+
 1. Go to Database > Replication
 2. Find the `chat_messages` table
 3. Enable replication for this table
 
 Or via SQL:
+
 ```sql
 ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
 ```
@@ -30,6 +32,7 @@ ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
 ```
 
 The application ensures security by:
+
 - Verifying user authentication via JWT tokens before allowing any tRPC calls
 - Checking participant membership in the `getMessages` and `sendMessage` procedures
 - Filtering Realtime messages client-side to only show messages from the current sweepstake

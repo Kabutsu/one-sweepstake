@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useOptimistic, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { supabaseClient } from "@/lib/supabase-client";
@@ -18,7 +18,10 @@ export default function ChatTab() {
   const { data: currentUser } = trpc.auth.me.useQuery();
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (state, newMessage: Message) => [...state, newMessage]
+  );
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     ConnectionStatus.CONNECTING
   );
@@ -34,12 +37,16 @@ export default function ChatTab() {
     );
 
   const sendMessageMutation = trpc.chat.sendMessage.useMutation({
-    onSuccess: () => {
-      setOptimisticMessages((prev) => prev.filter((msg) => !msg.isOptimistic));
+    onSuccess: (newMessage) => {
+      // Add the confirmed message to the messages list
+      setMessages((prev) => {
+        const exists = prev.some((msg) => msg.id === newMessage.id);
+        if (exists) return prev;
+        return [...prev, newMessage];
+      });
     },
     onError: (error) => {
       console.error("Failed to send message:", error);
-      setOptimisticMessages((prev) => prev.filter((msg) => !msg.isOptimistic));
       alert("Failed to send message. Please try again.");
     },
   });
@@ -52,7 +59,7 @@ export default function ChatTab() {
   }, [data]);
 
   useEffect(() => {
-    if (!sweepstakeId) return;
+    if (!sweepstakeId || !currentUser) return;
 
     let channel: RealtimeChannel;
 
@@ -77,10 +84,12 @@ export default function ChatTab() {
                 created_at: string;
               };
 
-              if (newMessage.user_id === currentUser?.id) {
+              // Skip if this is our own message - it's already been added via onSuccess
+              if (newMessage.user_id === currentUser.id) {
                 return;
               }
 
+              // Fetch user data for the message sender
               const { data: userData } = await supabaseClient
                 .from("users")
                 .select("display_name, avatar_url")
@@ -127,10 +136,10 @@ export default function ChatTab() {
         supabaseClient.removeChannel(channel);
       }
     };
-  }, [sweepstakeId, currentUser?.id]);
+  }, [sweepstakeId, currentUser]);
 
   const handleSendMessage = useCallback(
-    (message: string) => {
+    async (message: string) => {
       if (!sweepstakeId || !currentUser) return;
 
       const optimisticMessage: Message = {
@@ -143,21 +152,21 @@ export default function ChatTab() {
         isOptimistic: true,
       };
 
-      setOptimisticMessages((prev) => [...prev, optimisticMessage]);
+      // Optimistically add the message
+      addOptimisticMessage(optimisticMessage);
 
+      // Send to server
       sendMessageMutation.mutate({
         sweepstakeId,
         message,
       });
     },
-    [sweepstakeId, currentUser, sendMessageMutation]
+    [sweepstakeId, currentUser, sendMessageMutation, addOptimisticMessage]
   );
 
   const handleScrollToBottom = () => {
     setShowNewMessageIndicator(false);
   };
-
-  const allMessages = [...messages, ...optimisticMessages];
 
   const getStatusColor = () => {
     switch (connectionStatus) {
@@ -210,7 +219,7 @@ export default function ChatTab() {
 
       <div className="flex-1 overflow-hidden mb-4">
         <MessageList
-          messages={allMessages}
+          messages={optimisticMessages}
           currentUserId={currentUser.id}
           isLoading={isFetchingNextPage}
           hasMore={hasNextPage}
