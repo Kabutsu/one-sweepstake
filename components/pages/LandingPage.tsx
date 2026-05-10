@@ -21,6 +21,14 @@ export default function LandingPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background-light to-gray-100 dark:from-background-dark dark:to-gray-900">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "2s" }}
+          />
+        </div>
+
         <div className="card max-w-md w-full p-8 animate-fade-in">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-6 bg-primary rounded-full flex items-center justify-center">
@@ -40,9 +48,9 @@ export default function LandingPage() {
             </div>
             <h2 className="text-2xl font-bold mb-4">Check your email</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We&apos;ve sent a magic link to <strong>{email}</strong>
+              We&apos;ve sent a sign-in link to <strong>{email}</strong>
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-500 text-pretty">
               Click the link in the email to sign in. The link will expire in 30 minutes.
             </p>
           </div>
@@ -53,9 +61,17 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background-light to-gray-100 dark:from-background-dark dark:to-gray-900">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float"></div>
+        <div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-float"
+          style={{ animationDelay: "2s" }}
+        />
+      </div>
+
       <div className="card max-w-md w-full p-8 animate-slide-up">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-primary">One Sweepstake</h1>
+          <h1 className="text-4xl font-bold mb-2 text-primary">OneSweepstake</h1>
           <p className="text-gray-600 dark:text-gray-400">
             Run football sweepstakes with your friends
           </p>
@@ -87,7 +103,7 @@ export default function LandingPage() {
           <button
             type="submit"
             disabled={sendMagicLink.isPending}
-            className="btn-primary w-full flex items-center justify-center"
+            className="btn-primary w-full flex items-center justify-center rounded-md"
           >
             {sendMagicLink.isPending ? (
               <>

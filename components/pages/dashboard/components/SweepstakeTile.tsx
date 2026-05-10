@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { MockSweepstake } from "@/mocks/dashboardData";
 
 interface SweepstakeTileProps {
@@ -5,10 +6,18 @@ interface SweepstakeTileProps {
 }
 
 export default function SweepstakeTile({ sweepstake }: SweepstakeTileProps) {
+  const navigate = useNavigate();
   const isDrawComplete = sweepstake.drawCompletedAt !== null;
 
+  const handleClick = () => {
+    navigate(`/sweepstake/${sweepstake.id}`);
+  };
+
   return (
-    <div className="glass p-4 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-white/20 dark:border-white/10">
+    <div
+      onClick={handleClick}
+      className="glass p-4 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-white/20 dark:border-white/10"
+    >
       <div className="flex justify-between items-start mb-3">
         <div
           className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1 shadow-lg transition-all duration-300 ${isDrawComplete ? "bg-primary shadow-primary/50 group-hover:shadow-primary group-hover:scale-110" : "bg-yellow-500 shadow-yellow-500/50 group-hover:shadow-yellow-500 group-hover:scale-110"}`}
