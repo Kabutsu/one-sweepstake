@@ -113,6 +113,10 @@ export default function MessageList({
     );
   }
 
+  const isAtBottom = containerRef.current != null &&
+      containerRef.current.scrollHeight - containerRef.current.scrollTop <=
+      containerRef.current.clientHeight + 50;
+
   return (
     <div className="relative h-full">
       <div
@@ -181,7 +185,7 @@ export default function MessageList({
         <div ref={messagesEndRef} />
       </div>
 
-      {showNewMessageIndicator && (
+      {!isAtBottom && showNewMessageIndicator ? (
         <button
           onClick={() => {
             scrollToBottom(true);
@@ -199,7 +203,7 @@ export default function MessageList({
           </svg>
           New messages
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
