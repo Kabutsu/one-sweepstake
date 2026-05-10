@@ -28,7 +28,7 @@ export default function ParticipantsTab({ sweepstake }: ParticipantsTabProps) {
         </span>
       </div>
 
-      <div className="space-y-2 space-x-2 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {sweepstake.participants.map((participant, index) => (
           <div
             key={participant.id}

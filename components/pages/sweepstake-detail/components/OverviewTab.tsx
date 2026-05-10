@@ -1,4 +1,5 @@
 import { useState } from "react";
+import StatCard from "./StatCard";
 
 interface Sweepstake {
   id: string;
@@ -76,25 +77,22 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
       <div>
         <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Stats</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Participants</p>
+          <StatCard label="Participants">
             <p className="text-2xl font-black text-gray-900 dark:text-white">
               {sweepstake.currentParticipants}
               <span className="text-sm text-gray-500 dark:text-gray-400 font-normal">
                 /{sweepstake.maxParticipants}
               </span>
             </p>
-          </div>
+          </StatCard>
 
-          <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Open Spots</p>
+          <StatCard label="Open Spots">
             <p className="text-2xl font-black text-gray-900 dark:text-white">
               {sweepstake.maxParticipants - sweepstake.currentParticipants}
             </p>
-          </div>
+          </StatCard>
 
-          <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+          <StatCard label="Status">
             <div className="flex items-center space-x-2">
               <span
                 className={`w-2 h-2 rounded-full ${sweepstake.drawCompletedAt ? "bg-green-500" : "bg-yellow-500"}`}
@@ -103,17 +101,16 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
                 {sweepstake.drawCompletedAt ? "Active" : "Pending"}
               </p>
             </div>
-          </div>
+          </StatCard>
 
-          <div className="bg-white/50 dark:bg-black/20 p-4 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Created</p>
+          <StatCard label="Created">
             <p className="text-sm font-bold text-gray-900 dark:text-white">
               {new Date(sweepstake.createdAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               })}
             </p>
-          </div>
+          </StatCard>
         </div>
       </div>
 
