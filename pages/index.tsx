@@ -8,11 +8,7 @@ import AuthVerify from "@/components/pages/AuthVerify";
 import ProfileSetup from "@/components/pages/ProfileSetup";
 import Dashboard from "@/components/pages/dashboard";
 import CreateSweepstake from "@/components/pages/create-sweepstake";
-import SweepstakeDetailV1 from "@/components/pages/sweepstake-detail/1";
-import SweepstakeDetailV2 from "@/components/pages/sweepstake-detail/2";
-import SweepstakeDetailV3 from "@/components/pages/sweepstake-detail/3";
-import SweepstakeDetailV4 from "@/components/pages/sweepstake-detail/4";
-import SweepstakeDetailV5 from "@/components/pages/sweepstake-detail/5";
+import SweepstakeDetail from "@/components/pages/sweepstake-detail";
 
 import Layout from "@/components/ui/Layout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -38,7 +34,7 @@ export default function Home() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
         <Route path="/auth/verify" element={<AuthVerify />} />
         <Route
           path="/auth/setup"
@@ -48,30 +44,14 @@ export default function Home() {
         />
         <Route path="/*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
         <Route element={<Layout />}>
-          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route
             path="/sweepstake/create"
-            element={user ? <CreateSweepstake /> : <Navigate to="/" replace />}
+            element={<CreateSweepstake />}
           />
           <Route
-            path="/sweepstake/:id/1"
-            element={user ? <SweepstakeDetailV1 /> : <Navigate to="/" replace />}
-          />
-          <Route
-            path="/sweepstake/:id/2"
-            element={user ? <SweepstakeDetailV2 /> : <Navigate to="/" replace />}
-          />
-          <Route
-            path="/sweepstake/:id/3"
-            element={user ? <SweepstakeDetailV3 /> : <Navigate to="/" replace />}
-          />
-          <Route
-            path="/sweepstake/:id/4"
-            element={user ? <SweepstakeDetailV4 /> : <Navigate to="/" replace />}
-          />
-          <Route
-            path="/sweepstake/:id/5"
-            element={user ? <SweepstakeDetailV5 /> : <Navigate to="/" replace />}
+            path="/sweepstake/:id"
+            element={<SweepstakeDetail />}
           />
         </Route>
       </Routes>

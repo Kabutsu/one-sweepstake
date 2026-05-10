@@ -42,7 +42,7 @@
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-none border-2;
+    @apply w-full px-4 py-3 rounded-md border-2;
     @apply border-gray-300 dark:border-gray-600;
     @apply bg-surface-light dark:bg-surface-dark;
     @apply text-text-light dark:text-text-dark;
@@ -54,6 +54,14 @@
   .card {
     @apply bg-surface-light dark:bg-surface-dark;
     @apply border-2 border-gray-200 dark:border-gray-700;
-    @apply rounded-none shadow-lg;
+    @apply rounded-md shadow-lg;
+  }
+
+  .edge-shadow {
+    @apply shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all;
+  }
+
+  .no-scrollbar {
+    @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
   }
 }

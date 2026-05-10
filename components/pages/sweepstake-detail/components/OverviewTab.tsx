@@ -35,12 +35,12 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
             Share this code to invite participants
           </p>
           <div className="flex items-center justify-between">
-            <code className="text-4xl font-black tracking-wider text-primary">
+            <code className="text-2xl sm:text-4xl font-black tracking-wider text-primary">
               {sweepstake.joinCode}
             </code>
             <button
               onClick={handleCopyCode}
-              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-600 transition-all flex items-center space-x-2"
+              className="bg-primary text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-primary-600 transition-all flex items-center space-x-2"
             >
               {copiedCode ? (
                 <>

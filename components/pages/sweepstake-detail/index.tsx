@@ -9,7 +9,7 @@ import ChatTab from "./components/ChatTab";
 
 type TabType = "overview" | "participants" | "teams" | "chat";
 
-export default function SweepstakeDetailV3() {
+export default function SweepstakeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -51,9 +51,9 @@ export default function SweepstakeDetailV3() {
 
   const tabs = [
     { id: "overview" as TabType, label: "Overview", icon: "📊" },
-    { id: "participants" as TabType, label: "Participants", icon: "👥" },
     { id: "teams" as TabType, label: "Teams", icon: "⚽" },
     { id: "chat" as TabType, label: "Chat", icon: "💬" },
+    { id: "participants" as TabType, label: "Participants", icon: "👥" },
   ];
 
   return (
@@ -75,7 +75,7 @@ export default function SweepstakeDetailV3() {
 
       {/* Tabs */}
       <div className="glass p-2 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 mb-6">
-        <div className="flex space-x-2 overflow-x-auto">
+        <div className="flex space-x-2 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -86,7 +86,7 @@ export default function SweepstakeDetailV3() {
                   : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-black/20"
               }`}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <span className="hidden sm:inline mr-2">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -96,9 +96,9 @@ export default function SweepstakeDetailV3() {
       {/* Tab Content */}
       <div className="glass p-6 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab sweepstake={sweepstake} />}
-        {activeTab === "participants" && <ParticipantsTab sweepstake={sweepstake} />}
         {activeTab === "teams" && <TeamsTab />}
         {activeTab === "chat" && <ChatTab />}
+        {activeTab === "participants" && <ParticipantsTab sweepstake={sweepstake} />}
       </div>
     </div>
   );

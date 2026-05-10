@@ -1,3 +1,5 @@
+import { getInitials } from '@/utils/user-utils';
+
 interface Participant {
   id: string;
   userId: string;
@@ -26,7 +28,7 @@ export default function ParticipantsTab({ sweepstake }: ParticipantsTabProps) {
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 space-x-2 sm:grid sm:grid-cols-2 lg:grid-cols-3">
         {sweepstake.participants.map((participant, index) => (
           <div
             key={participant.id}
@@ -34,7 +36,7 @@ export default function ParticipantsTab({ sweepstake }: ParticipantsTabProps) {
           >
             <div className="flex items-center space-x-3 flex-1">
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {participant.displayName?.[0]?.toUpperCase() || "?"}
+                {getInitials(participant.displayName)}
               </div>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">

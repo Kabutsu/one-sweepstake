@@ -10,7 +10,7 @@ export default function SweepstakeTile({ sweepstake }: SweepstakeTileProps) {
   const isDrawComplete = sweepstake.drawCompletedAt !== null;
 
   const handleClick = () => {
-    navigate(`/sweepstake/${sweepstake.id}/1`);
+    navigate(`/sweepstake/${sweepstake.id}`);
   };
 
   return (

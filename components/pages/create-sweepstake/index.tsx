@@ -99,60 +99,52 @@ export default function CreateSweepstake() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white"
-            >
-              Sweepstake Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Office World Cup 2026"
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-              maxLength={100}
-              disabled={createMutation.isPending}
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Give your sweepstake a memorable name
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="maxParticipants"
-              className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white"
-            >
-              Maximum Participants
-            </label>
-            <div className="relative">
+          <div className="grid gap-6 items-start grid-cols-1 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white"
+              >
+                Sweepstake Name
+              </label>
               <input
-                id="maxParticipants"
-                type="number"
-                value={maxParticipants}
-                onChange={(e) => setMaxParticipants(parseInt(e.target.value) || 0)}
-                min={2}
-                max={48}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Office World Cup 2026"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                maxLength={100}
                 disabled={createMutation.isPending}
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Give your sweepstake a memorable name
+              </p>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Between 2 and 48 participants (there are 48 teams in the tournament)
-            </p>
+
+            <div>
+              <label
+                htmlFor="maxParticipants"
+                className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white"
+              >
+                Maximum Participants
+              </label>
+              <div className="relative">
+                <input
+                  id="maxParticipants"
+                  type="number"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(parseInt(e.target.value) || 0)}
+                  min={2}
+                  max={48}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  disabled={createMutation.isPending}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Between 2 and 48 participants (there are 48 teams in the tournament)
+              </p>
+            </div>
           </div>
 
           <div className="glass p-4 rounded-xl border border-primary/20">
@@ -201,7 +193,7 @@ export default function CreateSweepstake() {
 
           <button
             type="submit"
-            disabled={createMutation.isPending || !name.trim()}
+            disabled={createMutation.isPending || !name.trim() || maxParticipants < 2 || maxParticipants > 48}
             className="w-full bg-gradient-to-r from-primary to-primary-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 hover:shadow-xl transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {createMutation.isPending ? (
