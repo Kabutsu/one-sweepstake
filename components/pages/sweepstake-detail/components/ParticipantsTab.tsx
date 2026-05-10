@@ -1,4 +1,4 @@
-import { getInitials } from '@/utils/user-utils';
+import { getInitials } from "@/utils/user-utils";
 
 interface Participant {
   id: string;

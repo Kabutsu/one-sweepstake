@@ -77,9 +77,7 @@ export const sweepstakesRouter = router({
       const [participant] = await db
         .select()
         .from(participants)
-        .where(
-          and(eq(participants.sweepstakeId, input.id), eq(participants.userId, ctx.user.id))
-        );
+        .where(and(eq(participants.sweepstakeId, input.id), eq(participants.userId, ctx.user.id)));
 
       if (!participant) {
         throw new Error("You are not a participant in this sweepstake");

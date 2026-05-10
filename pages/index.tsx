@@ -45,14 +45,8 @@ export default function Home() {
         <Route path="/*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route
-            path="/sweepstake/create"
-            element={<CreateSweepstake />}
-          />
-          <Route
-            path="/sweepstake/:id"
-            element={<SweepstakeDetail />}
-          />
+          <Route path="/sweepstake/create" element={<CreateSweepstake />} />
+          <Route path="/sweepstake/:id" element={<SweepstakeDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

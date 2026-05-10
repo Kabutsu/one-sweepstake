@@ -193,7 +193,12 @@ export default function CreateSweepstake() {
 
           <button
             type="submit"
-            disabled={createMutation.isPending || !name.trim() || maxParticipants < 2 || maxParticipants > 48}
+            disabled={
+              createMutation.isPending ||
+              !name.trim() ||
+              maxParticipants < 2 ||
+              maxParticipants > 48
+            }
             className="w-full bg-gradient-to-r from-primary to-primary-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 hover:shadow-xl transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {createMutation.isPending ? (

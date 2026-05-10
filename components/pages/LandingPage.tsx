@@ -21,14 +21,14 @@ export default function LandingPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background-light to-gray-100 dark:from-background-dark dark:to-gray-900">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float"></div>
-        <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
-        />
-      </div>
-        
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "2s" }}
+          />
+        </div>
+
         <div className="card max-w-md w-full p-8 animate-fade-in">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-6 bg-primary rounded-full flex items-center justify-center">
@@ -68,7 +68,7 @@ export default function LandingPage() {
           style={{ animationDelay: "2s" }}
         />
       </div>
-      
+
       <div className="card max-w-md w-full p-8 animate-slide-up">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-primary">OneSweepstake</h1>
