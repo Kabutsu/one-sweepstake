@@ -113,8 +113,9 @@ export default function MessageList({
     );
   }
 
-  const isAtBottom = containerRef.current != null &&
-      containerRef.current.scrollHeight - containerRef.current.scrollTop <=
+  const isAtBottom =
+    containerRef.current != null &&
+    containerRef.current.scrollHeight - containerRef.current.scrollTop <=
       containerRef.current.clientHeight + 50;
 
   return (
