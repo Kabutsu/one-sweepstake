@@ -108,7 +108,7 @@ export default function MessageList({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto space-y-3 pb-4 scroll-smooth"
+        className="h-full overflow-y-auto space-y-3 pb-4 scroll-smooth scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-thin hover:scrollbar-thumb-red-500"
       >
         {isLoading && hasMore && (
           <div className="flex justify-center py-2">
