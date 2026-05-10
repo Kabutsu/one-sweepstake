@@ -64,4 +64,8 @@
   .no-scrollbar {
     @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
   }
+
+  .scrollbar-pretty {
+    @apply [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-stone-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-stone-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500;
+  }
 }
