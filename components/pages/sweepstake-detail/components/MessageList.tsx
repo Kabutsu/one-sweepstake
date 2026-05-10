@@ -53,6 +53,16 @@ export default function MessageList({
   const handleScroll = () => {
     if (!containerRef.current || !onLoadMore || !hasMore || isLoading) return;
 
+    // Check if scrolled to bottom and hide indicator
+    const isAtBottom =
+      containerRef.current.scrollHeight - containerRef.current.scrollTop <=
+      containerRef.current.clientHeight + 50;
+
+    if (isAtBottom && onScrollToBottom) {
+      onScrollToBottom();
+    }
+
+    // Load more messages when scrolled to top
     if (containerRef.current.scrollTop === 0) {
       prevScrollHeightRef.current = containerRef.current.scrollHeight;
       onLoadMore();
@@ -173,8 +183,11 @@ export default function MessageList({
 
       {showNewMessageIndicator && (
         <button
-          onClick={onScrollToBottom}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-2 rounded-full shadow-lg hover:bg-primary-600 transition-all flex items-center gap-2 text-sm font-semibold"
+          onClick={() => {
+            scrollToBottom(true);
+            onScrollToBottom?.();
+          }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-2 rounded-full shadow-lg hover:bg-primary-600 transition-all flex items-center gap-2 text-sm font-semibold animate-bounce"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path

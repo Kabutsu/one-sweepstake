@@ -66,7 +66,11 @@ export default function ChatTab() {
     const setupRealtimeSubscription = async () => {
       try {
         channel = supabaseClient
-          .channel(`chat:${sweepstakeId}`)
+          .channel(`chat:${sweepstakeId}`, {
+            config: {
+              broadcast: { self: false },
+            },
+          })
           .on(
             "postgres_changes",
             {
