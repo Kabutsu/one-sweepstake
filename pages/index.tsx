@@ -8,6 +8,7 @@ import AuthVerify from "@/components/pages/AuthVerify";
 import ProfileSetup from "@/components/pages/ProfileSetup";
 import Dashboard from "@/components/pages/dashboard";
 import CreateSweepstake from "@/components/pages/create-sweepstake";
+import JoinSweepstake from "@/components/pages/join-sweepstake";
 import SweepstakeDetail from "@/components/pages/sweepstake-detail";
 
 import Layout from "@/components/ui/Layout";
@@ -46,6 +47,7 @@ export default function Home() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/sweepstake/create" element={<CreateSweepstake />} />
+          <Route path="/sweepstake/join" element={<JoinSweepstake />} />
           <Route path="/sweepstake/:id" element={<SweepstakeDetail />} />
         </Route>
       </Routes>

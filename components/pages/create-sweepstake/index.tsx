@@ -14,7 +14,7 @@ export default function CreateSweepstake() {
 
   const createMutation = trpc.sweepstakes.createSweepstake.useMutation({
     onSuccess: (data) => {
-      navigate(`/sweepstake/${data.id}/1`);
+      navigate(`/sweepstake/${data.id}`);
     },
     onError: (err) => {
       setError(err.message || "Failed to create sweepstake");

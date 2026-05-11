@@ -21,7 +21,10 @@ export default function ActionBar() {
           </svg>
           <span>Create Sweepstake</span>
         </button>
-        <button className="flex-1 border-2 border-primary text-primary py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:bg-primary hover:text-white hover:shadow-xl transition-all duration-300 font-semibold bg-white/30 dark:bg-black/20">
+        <button
+          onClick={() => navigate("/sweepstake/join")}
+          className="flex-1 border-2 border-primary text-primary py-3.5 rounded-xl flex items-center justify-center space-x-2 hover:bg-primary hover:text-white hover:shadow-xl transition-all duration-300 font-semibold bg-white/30 dark:bg-black/20"
+        >
           <svg
             className="w-5 h-5"
             fill="none"
