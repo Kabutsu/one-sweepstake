@@ -145,7 +145,7 @@ export default function MessageList({
               {!isOwnMessage ? (
                 showAvatar ? (
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold mb-1 ${
                       isOwnMessage
                         ? "bg-gradient-to-br from-primary to-primary-600"
                         : "bg-gradient-to-br from-gray-400 to-gray-600"
@@ -162,7 +162,7 @@ export default function MessageList({
                 className={`flex flex-col max-w-[70%] ${isOwnMessage ? "items-end" : "items-start"}`}
               >
                 {!isOwnMessage && showUsername && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 mt-4 px-3">
                     {msg.displayName || "Anonymous"}
                   </span>
                 )}
@@ -170,7 +170,7 @@ export default function MessageList({
                   className={`px-4 py-2 rounded-2xl max-w-full ${
                     isOwnMessage
                       ? "bg-primary text-white"
-                      : "bg-white/50 dark:bg-black/20 text-gray-900 dark:text-white"
+                      : "bg-neutral-100 dark:bg-neutral-900 text-gray-900 dark:text-white"
                   }`}
                 >
                   <p className="text-sm [overflow-wrap:anywhere] hyphens-auto">{msg.message}</p>

@@ -157,4 +157,62 @@ export const sweepstakesRouter = router({
 
       return newSweepstake;
     }),
+
+  joinSweepstake: protectedProcedure
+    .input(
+      z.object({
+        joinCode: z.string().min(1, "Join code is required"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const normalizedCode = input.joinCode.trim().toUpperCase();
+
+      // Find sweepstake by join code
+      const [sweepstake] = await db
+        .select()
+        .from(sweepstakes)
+        .where(eq(sweepstakes.joinCode, normalizedCode))
+        .limit(1);
+
+      if (!sweepstake) {
+        throw new Error("Invalid join code. Please check the code and try again.");
+      }
+
+      // Check if draw has been completed
+      if (sweepstake.drawCompletedAt) {
+        throw new Error("This sweepstake has already been drawn and cannot accept new participants.");
+      }
+
+      // Check if sweepstake is full
+      if (sweepstake.currentParticipants >= sweepstake.maxParticipants) {
+        throw new Error("This sweepstake is full and cannot accept more participants.");
+      }
+
+      // Check if user is already a participant
+      const [existingParticipant] = await db
+        .select()
+        .from(participants)
+        .where(and(eq(participants.sweepstakeId, sweepstake.id), eq(participants.userId, ctx.user.id)))
+        .limit(1);
+
+      if (existingParticipant) {
+        throw new Error("You are already a participant in this sweepstake.");
+      }
+
+      // Add user as participant
+      await db.insert(participants).values({
+        sweepstakeId: sweepstake.id,
+        userId: ctx.user.id,
+      });
+
+      // Increment current participant count
+      await db
+        .update(sweepstakes)
+        .set({
+          currentParticipants: sweepstake.currentParticipants + 1,
+        })
+        .where(eq(sweepstakes.id, sweepstake.id));
+
+      return { sweepstakeId: sweepstake.id };
+    }),
 });
