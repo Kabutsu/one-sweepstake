@@ -40,8 +40,11 @@ export default function AuthVerify() {
     verifyMagicLink
       .mutateAsync({ token, email })
       .then(async (result) => {
-        // Refetch user data and wait for it to complete
-        await utils.auth.me.refetch();
+        // Invalidate all queries to clear stale auth-dependent data
+        await utils.invalidateQueries();
+
+        // Clear the URL hash to prevent accidental re-verification on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
 
         // Navigate based on whether profile is complete
         if (result.isNewUser || !result.user.displayName) {

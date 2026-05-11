@@ -92,6 +92,11 @@ export const authRouter = router({
       // Create our own JWT token
       const authToken = await createToken(user.id);
 
+      // Set cache-busting headers to prevent stale auth state
+      ctx.res?.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
+      ctx.res?.setHeader("Pragma", "no-cache");
+      ctx.res?.setHeader("Expires", "0");
+
       // Set cookie via Next.js res object
       ctx.res?.setHeader(
         "Set-Cookie",
