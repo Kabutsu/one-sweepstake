@@ -1,8 +1,10 @@
 import { router, protectedProcedure } from "../trpc";
 import { db } from "@/db";
-import { sweepstakes, participants, users, tournaments } from "@/db/schema";
+import { sweepstakes, participants, users, tournaments, teamAssignments } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { executeTeamDraw } from "@/utils/draw-algorithm";
+import { SeedingConfig } from "@/scripts/seed-tournament";
 
 // Generate a unique random join code (6-8 characters, alphanumeric)
 function generateJoinCode(): string {
@@ -218,5 +220,151 @@ export const sweepstakesRouter = router({
         .where(eq(sweepstakes.id, sweepstake.id));
 
       return { sweepstakeId: sweepstake.id };
+    }),
+
+  executeDraw: protectedProcedure
+    .input(z.object({ sweepstakeId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      // Get sweepstake with tournament
+      const [sweepstake] = await db
+        .select()
+        .from(sweepstakes)
+        .where(eq(sweepstakes.id, input.sweepstakeId))
+        .limit(1);
+
+      if (!sweepstake) {
+        throw new Error("Sweepstake not found");
+      }
+
+      // Check if user is the creator
+      if (sweepstake.creatorId !== ctx.user.id) {
+        throw new Error("Only the sweepstake creator can execute the draw");
+      }
+
+      // Check if draw has already been completed
+      if (sweepstake.drawCompletedAt) {
+        throw new Error("Draw has already been completed for this sweepstake");
+      }
+
+      // Get tournament with seeding config
+      const [tournament] = await db
+        .select()
+        .from(tournaments)
+        .where(eq(tournaments.id, sweepstake.tournamentId))
+        .limit(1);
+
+      if (!tournament) {
+        throw new Error("Tournament not found");
+      }
+
+      if (!tournament.seedingConfig) {
+        throw new Error("Tournament seeding configuration not found");
+      }
+
+      // Get all participants with user details
+      const sweepstakeParticipants = await db
+        .select({
+          id: participants.id,
+          userId: participants.userId,
+          displayName: users.displayName,
+        })
+        .from(participants)
+        .innerJoin(users, eq(participants.userId, users.id))
+        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+
+      if (sweepstakeParticipants.length === 0) {
+        throw new Error("No participants found for this sweepstake");
+      }
+
+      // Execute the draw algorithm
+      const seedingConfig = tournament.seedingConfig as SeedingConfig;
+      const assignments = executeTeamDraw(sweepstakeParticipants, seedingConfig);
+
+      // Insert team assignments into database
+      await db.insert(teamAssignments).values(
+        assignments.map((assignment) => ({
+          participantId: assignment.participantId,
+          teamId: assignment.teamId,
+          teamName: assignment.teamName,
+          teamLogo: assignment.teamLogo,
+        }))
+      );
+
+      // Mark draw as completed
+      await db
+        .update(sweepstakes)
+        .set({
+          drawCompletedAt: new Date(),
+        })
+        .where(eq(sweepstakes.id, input.sweepstakeId));
+
+      return {
+        success: true,
+        assignedTeams: assignments.length,
+      };
+    }),
+
+  getTeamAssignments: protectedProcedure
+    .input(z.object({ sweepstakeId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      // Verify user is a participant
+      const [participant] = await db
+        .select()
+        .from(participants)
+        .where(
+          and(
+            eq(participants.sweepstakeId, input.sweepstakeId),
+            eq(participants.userId, ctx.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!participant) {
+        throw new Error("You are not a participant in this sweepstake");
+      }
+
+      // Get all team assignments for this sweepstake
+      const assignments = await db
+        .select({
+          id: teamAssignments.id,
+          participantId: teamAssignments.participantId,
+          teamId: teamAssignments.teamId,
+          teamName: teamAssignments.teamName,
+          teamLogo: teamAssignments.teamLogo,
+          assignedAt: teamAssignments.assignedAt,
+          userId: participants.userId,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(teamAssignments)
+        .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
+        .innerJoin(users, eq(participants.userId, users.id))
+        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+
+      // Group by participant
+      const grouped = assignments.reduce(
+        (acc, assignment) => {
+          if (!acc[assignment.participantId]) {
+            acc[assignment.participantId] = {
+              participantId: assignment.participantId,
+              userId: assignment.userId,
+              displayName: assignment.displayName,
+              avatarUrl: assignment.avatarUrl,
+              teams: [],
+            };
+          }
+          acc[assignment.participantId].teams.push({
+            id: assignment.id,
+            teamId: assignment.teamId,
+            teamName: assignment.teamName,
+            teamLogo: assignment.teamLogo,
+            assignedAt: assignment.assignedAt,
+          });
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+
+      return Object.values(grouped);
     }),
 });

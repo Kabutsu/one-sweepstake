@@ -79,7 +79,7 @@ export default function MessageList({
   }, [isLoading]);
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString("en-US", {
+    return new Date(date).toLocaleTimeString("en-GB", {
       hour: "numeric",
       minute: "2-digit",
     });
@@ -136,6 +136,10 @@ export default function MessageList({
           const showUsername =
             !isOwnMessage && (index === 0 || messages[index - 1]?.userId !== msg.userId);
           const showAvatar = index === 0 || messages[index + 1]?.userId !== msg.userId;
+          const isNewDay =
+            index === 0 ||
+            new Date(messages[index - 1].createdAt).toDateString() !==
+              new Date(msg.createdAt).toDateString();
 
           return (
             <div
@@ -158,16 +162,28 @@ export default function MessageList({
                 )
               ) : null}
 
-              <div
-                className={`flex flex-col max-w-[70%] ${isOwnMessage ? "items-end" : "items-start"}`}
-              >
+              <div className={`flex flex-col w-full ${isOwnMessage ? "items-end" : "items-start"}`}>
+                {isNewDay && (
+                  <div className="flex items-center my-4 w-full">
+                    <hr className="flex-grow border-gray-300 dark:border-gray-700" />
+                    <span className="mx-4 text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(msg.createdAt).toLocaleDateString("en-GB", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <hr className="flex-grow border-gray-300 dark:border-gray-700" />
+                  </div>
+                )}
+
                 {!isOwnMessage && showUsername && (
                   <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 mt-4 px-3">
                     {msg.displayName || "Anonymous"}
                   </span>
                 )}
                 <div
-                  className={`px-4 py-2 rounded-2xl max-w-full ${
+                  className={`px-4 py-2 rounded-2xl max-w-[70%] ${
                     isOwnMessage
                       ? "bg-primary text-white"
                       : "bg-neutral-100 dark:bg-neutral-900 text-gray-900 dark:text-white"

@@ -43,7 +43,7 @@ export default function ParticipantsTab({ sweepstake }: ParticipantsTabProps) {
                   {participant.displayName || "Anonymous"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Joined {new Date(participant.joinedAt).toLocaleDateString()}
+                  Joined {new Date(participant.joinedAt).toLocaleDateString("en-GB")}
                 </p>
               </div>
             </div>
