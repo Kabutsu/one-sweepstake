@@ -12,7 +12,7 @@ export default function DrawTeamsButton({
   onDrawComplete,
 }: DrawTeamsButtonProps) {
   const [showModal, setShowModal] = useState(false);
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const executeDraw = trpc.sweepstakes.executeDraw.useMutation({
     onSuccess: () => {
@@ -54,13 +54,13 @@ export default function DrawTeamsButton({
 
       {/* Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass max-w-md w-full p-6 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 top-16 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-black max-w-md w-full p-6 rounded-2xl shadow-2xl border border-white/30 dark:border-white/10">
             {/* Header */}
             <div className="flex items-start gap-4 mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl">
+              <div className="p-3 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 rounded-xl">
                 <svg
-                  className="w-6 h-6 text-blue-500"
+                  className="w-6 h-6 text-indigo-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

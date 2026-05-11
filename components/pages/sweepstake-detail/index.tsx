@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import OverviewTab from "./components/OverviewTab";
 import ParticipantsTab from "./components/ParticipantsTab";
-import TeamsTab from "./components/TeamsTab";
+import TeamsTab from "./components/teams-tab";
 import ChatTab from "./components/chat-tab";
 
 type TabType = "overview" | "participants" | "teams" | "chat";
@@ -107,7 +107,7 @@ export default function SweepstakeDetail() {
       </div>
 
       {/* Tab Content */}
-      <div className="glass p-6 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 min-h-[400px]">
+      <div className="bg-white/70 dark:bg-black/50 p-6 shadow-xl rounded-2xl border border-white/30 dark:border-white/10 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab sweepstake={sweepstake} />}
         {activeTab === "teams" && (
           <TeamsTab

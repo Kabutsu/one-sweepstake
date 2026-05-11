@@ -1,7 +1,8 @@
 import { trpc } from "@/lib/trpc";
 import EmptyState from "@/components/ui/EmptyState";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import DrawTeamsButton from "./DrawTeamsButton";
+import DrawTeamsButton from "./components/DrawTeamsButton";
+import { getInitials } from '@/utils/user-utils';
 
 interface TeamsTabProps {
   sweepstakeId: string;
@@ -9,18 +10,53 @@ interface TeamsTabProps {
   isCreator: boolean;
 }
 
+interface Team {
+  teamId: string;
+  teamName: string;
+  teamLogo: string | null;
+}
+
+interface TeamAssignment {
+  participantId: string;
+  userId: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  teams: Team[];
+}
+
 export default function TeamsTab({
   sweepstakeId,
   drawCompletedAt,
   isCreator,
 }: TeamsTabProps) {
+  const { data: currentUser } = trpc.auth.me.useQuery();
+  
   const {
     data: teamAssignments,
     isLoading,
     error,
   } = trpc.sweepstakes.getTeamAssignments.useQuery(
     { sweepstakeId },
-    { enabled: !!drawCompletedAt }
+    { 
+      enabled: !!drawCompletedAt,
+      select: (data) => {
+        console.log("Raw team assignments from API:", data);
+        return data.sort((a: TeamAssignment, b: TeamAssignment) => {
+        // Sort by:
+        // 1. Current user first
+        if (a.userId === currentUser?.id) return -1;
+        if (b.userId === currentUser?.id) return 1;
+        
+        // 2. Number of teams (descending)
+        if (a.teams.length !== b.teams.length) {
+          return b.teams.length - a.teams.length;
+        }
+
+        // 3. Alphabetical by display name
+        return (a.displayName || "").localeCompare(b.displayName || "");
+      })
+      },
+    },
   );
 
   // Show loading state while fetching
@@ -105,10 +141,10 @@ export default function TeamsTab({
 
       {/* Team Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {teamAssignments.map((assignment: any) => (
+        {teamAssignments.map((assignment: TeamAssignment) => (
           <div
             key={assignment.participantId}
-            className="glass p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-shadow"
+            className="bg-white dark:bg-black/50 backdrop-blur-lg p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-shadow"
           >
             {/* Participant Header */}
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
@@ -121,7 +157,7 @@ export default function TeamsTab({
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
-                    {(assignment.displayName || "U").charAt(0).toUpperCase()}
+                    {getInitials(assignment.displayName || "🥸")}
                   </div>
                 )}
               </div>
@@ -138,9 +174,9 @@ export default function TeamsTab({
 
             {/* Teams List */}
             <div className="space-y-2">
-              {assignment.teams.map((team: any) => (
+              {assignment.teams.map((team) => (
                 <div
-                  key={team.id}
+                  key={team.teamId}
                   className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   {team.teamLogo ? (
