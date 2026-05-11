@@ -36,12 +36,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const startDate = new Date(tournament.startDate);
       const endDate = new Date(tournament.endDate);
 
-      if (now < startDate || now > endDate) {
+      // Start caching matches 30 days before tournament starts
+      const cacheStartDate = new Date(startDate);
+      cacheStartDate.setDate(cacheStartDate.getDate() - 30);
+
+      if (now < cacheStartDate || now > endDate) {
         results.push({
           tournamentId: tournament.id,
           tournamentName: tournament.name,
           skipped: true,
-          reason: "Outside tournament dates",
+          reason: "Outside caching window (30 days before start to end date)",
         });
         continue;
       }

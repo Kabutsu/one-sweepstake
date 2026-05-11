@@ -27,7 +27,7 @@ export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps)
     return (
       <div className="glass p-6 shadow-xl rounded-xl">
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center shadow-inner">
+          <div className="w-20 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center shadow-inner">
             <svg
               className="w-7 h-7 text-gray-400 dark:text-gray-500"
               fill="none"

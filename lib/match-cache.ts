@@ -33,6 +33,11 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
 
     for (const match of matches) {
       try {
+        // Skip matches without teams assigned (TBD matches)
+        if (!match.homeTeam?.name || !match.awayTeam?.name) {
+          continue;
+        }
+
         const existingMatch = await db
           .select()
           .from(matchCache)
@@ -95,5 +100,9 @@ export async function shouldPollMatches(tournamentId: string): Promise<boolean> 
   const startDate = new Date(tournament.startDate);
   const endDate = new Date(tournament.endDate);
 
-  return now >= startDate && now <= endDate;
+  // Start polling 30 days before tournament starts
+  const cacheStartDate = new Date(startDate);
+  cacheStartDate.setDate(cacheStartDate.getDate() - 30);
+
+  return now >= cacheStartDate && now <= endDate;
 }
