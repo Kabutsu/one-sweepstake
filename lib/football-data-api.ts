@@ -11,13 +11,16 @@ export interface FootballDataMatch {
     | "POSTPONED"
     | "CANCELLED"
     | "AWARDED";
+  stage?: string;
   homeTeam: {
     id: number;
     name: string;
+    crest?: string;
   };
   awayTeam: {
     id: number;
     name: string;
+    crest?: string;
   };
   score: {
     fullTime: {
