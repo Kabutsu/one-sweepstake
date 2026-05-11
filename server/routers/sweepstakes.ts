@@ -6,6 +6,8 @@ import { z } from "zod";
 import { executeTeamDraw } from "@/utils/draw-algorithm";
 import { SeedingConfig } from "@/scripts/seed-tournament";
 
+const WC_CODE = "fifa-world-cup";
+
 // Generate a unique random join code (6-8 characters, alphanumeric)
 function generateJoinCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -44,7 +46,7 @@ export const sweepstakesRouter = router({
     const tournament = await db
       .select()
       .from(tournaments)
-      .where(eq(tournaments.isActive, true))
+      .where(eq(tournaments.slug, WC_CODE))
       .limit(1);
 
     return tournament[0] || null;

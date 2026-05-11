@@ -40,6 +40,10 @@ function formatMatchStatus(status: string, scheduledAt: Date): { label: string; 
   }
 }
 
+function formatTeamName(name: string): string {
+  return name.replace(/FC$/, "").trim();
+}
+
 export default function MatchCard({
   homeTeamName,
   awayTeamName,
@@ -56,8 +60,8 @@ export default function MatchCard({
   const formattedStage = formatStage(stage);
 
   return (
-    <div className="glass p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 dark:border-white/10">
-      <div className="flex items-center justify-between mb-4">
+    <div className="glass flex flex-col content-start gap-4 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 dark:border-white/10">
+      <div className="flex items-center justify-between">
         <span
           className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-md ${
             isLive
@@ -74,7 +78,7 @@ export default function MatchCard({
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col flex-grow gap-3 justify-around">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {homeTeamCrest && (
@@ -86,7 +90,7 @@ export default function MatchCard({
               />
             )}
             <span className="font-semibold text-gray-900 dark:text-white truncate">
-              {homeTeamName}
+              {formatTeamName(homeTeamName)}
             </span>
           </div>
           {showScore && (
@@ -109,7 +113,7 @@ export default function MatchCard({
               />
             )}
             <span className="font-semibold text-gray-900 dark:text-white truncate">
-              {awayTeamName}
+              {formatTeamName(awayTeamName)}
             </span>
           </div>
           {showScore && (
