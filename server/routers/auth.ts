@@ -8,14 +8,17 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
 
 function getOriginFromRequest(req?: any): string {
-  if (!req) {
+  if (!req?.headers) {
     return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   }
 
   const protocol = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers.host;
+  let host = req.headers.host;
 
   if (host) {
+    // Remove port from host if present (only keep domain)
+    // This handles cases like "one-sweepstake-2.vercel.app:443" -> "one-sweepstake-2.vercel.app"
+    host = host.split(":")[0];
     return `${protocol}://${host}`;
   }
 
