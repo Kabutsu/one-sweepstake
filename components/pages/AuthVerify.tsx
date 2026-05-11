@@ -40,8 +40,14 @@ export default function AuthVerify() {
     verifyMagicLink
       .mutateAsync({ token, email })
       .then(async (result) => {
-        // Invalidate all queries to clear stale auth-dependent data
-        await utils.invalidateQueries();
+        // Refetch all queries to clear stale auth-dependent data
+        await Promise.all([
+          utils.auth.me.refetch(),
+          utils.sweepstakes.getUserSweepstakes.refetch(),
+          utils.sweepstakes.getActiveTournament.refetch(),
+        ]).catch(() => {
+          // Ignore refetch errors and continue
+        });
 
         // Clear the URL hash to prevent accidental re-verification on refresh
         window.history.replaceState({}, document.title, window.location.pathname);
