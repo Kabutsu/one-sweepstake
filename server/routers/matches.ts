@@ -44,13 +44,25 @@ export const matchesRouter = router({
         .from(matchCache)
         .where(eq(matchCache.tournamentId, input.tournamentId));
 
-      const liveMatches = matches.filter((match) => match.status === "IN_PLAY");
-      const upcomingMatches = matches.filter((match) =>
-        ["SCHEDULED", "TIMED"].includes(match.status)
-      );
-      const finishedMatches = matches.filter((match) => match.status === "FINISHED");
+      const liveMatches = matches
+        .filter((match) => match.status === "IN_PLAY" || match.status === "PAUSED")
+        .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+
+      const upcomingMatches = matches
+        .filter((match) => ["SCHEDULED", "TIMED"].includes(match.status))
+        .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+
+      const finishedMatches = matches
+        .filter((match) => match.status === "FINISHED")
+        .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+
+      // Prioritize: live first, then fill with upcoming to reach minimum 2 matches
+      const displayMatches = [...liveMatches];
+      const needed = Math.max(0, 2 - displayMatches.length);
+      displayMatches.push(...upcomingMatches.slice(0, needed));
 
       return {
+        display: displayMatches,
         live: liveMatches,
         upcoming: upcomingMatches.slice(0, 5),
         finished: finishedMatches.slice(0, 10),

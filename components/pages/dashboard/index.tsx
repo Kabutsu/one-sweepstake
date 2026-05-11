@@ -3,19 +3,25 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import LiveMatchesSection from "./components/LiveMatchesSection";
 import SweepstakeTile from "./components/SweepstakeTile";
 import ActionBar from "./components/ActionBar";
-import { mockSweepstakes, mockLiveMatches } from "@/mocks/dashboardData";
+import { mockSweepstakes } from "@/mocks/dashboardData";
 
 const emptySweepstakes: typeof mockSweepstakes = [];
-const emptyLiveMatches: typeof mockLiveMatches = [];
 
 export default function Dashboard() {
   const { data: user } = trpc.auth.me.useQuery();
-  const { data: sweepstakes, isLoading } = trpc.sweepstakes.getUserSweepstakes.useQuery();
+  const { data: sweepstakes, isLoading: sweepstakesLoading } =
+    trpc.sweepstakes.getUserSweepstakes.useQuery();
+  const { data: activeTournament } = trpc.sweepstakes.getActiveTournament.useQuery();
+
+  const { data: matchData } = trpc.matches.getLiveMatches.useQuery(
+    { tournamentId: activeTournament?.id ?? "" },
+    { enabled: !!activeTournament?.id }
+  );
 
   const displaySweepstakes = sweepstakes || mockSweepstakes;
-  const [match] = mockLiveMatches;
+  const displayMatches = matchData?.display ?? [];
 
-  if (!user || isLoading) {
+  if (!user || sweepstakesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -34,7 +40,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <LiveMatchesSection matches={[match]} />
+      <LiveMatchesSection matches={displayMatches} />
 
       <ActionBar />
 

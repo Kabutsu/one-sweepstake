@@ -1,15 +1,33 @@
-import { MockLiveMatch } from "@/mocks/dashboardData";
+"use client";
+
+import { useState } from "react";
+import MatchCard from "./MatchCard";
+
+interface Match {
+  id: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeTeamCrest?: string | null;
+  awayTeamCrest?: string | null;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  status: string;
+  stage?: string | null;
+  scheduledAt: Date;
+}
 
 interface LiveMatchesSectionProps {
-  matches: MockLiveMatch[];
+  matches: Match[];
 }
 
 export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!matches.length) {
     return (
       <div className="glass p-6 shadow-xl rounded-xl">
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center shadow-inner">
+          <div className="w-20 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center shadow-inner">
             <svg
               className="w-7 h-7 text-gray-400 dark:text-gray-500"
               fill="none"
@@ -25,17 +43,20 @@ export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps)
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-1">
-              No Live Matches Currently
-            </h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-1">No Matches Available</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Matches will appear here when they&apos;re in progress
+              Matches will appear here when they&apos;re scheduled or in progress
             </p>
           </div>
         </div>
       </div>
     );
   }
+
+  const liveCount = matches.filter((m) => m.status === "IN_PLAY" || m.status === "PAUSED").length;
+
+  const hasMany = matches.length > 2;
+  const displayedMatches = hasMany && !isExpanded ? matches.slice(0, 2) : matches;
 
   return (
     <div className="glass p-6 shadow-2xl rounded-2xl relative overflow-hidden">
@@ -53,52 +74,58 @@ export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps)
 
       <div className="flex items-center justify-between mb-6 relative z-10">
         <h2 className="text-lg font-bold tracking-tight flex items-center space-x-2 text-gray-900 dark:text-white">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-          </span>
-          <span>Live Matches</span>
+          {liveCount > 0 ? (
+            <>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+              </span>
+              <span>Live Matches</span>
+            </>
+          ) : (
+            <span>Upcoming Matches</span>
+          )}
         </h2>
-        <span className="text-xs font-semibold bg-gradient-to-r from-primary to-primary-600 text-white px-3 py-1.5 rounded-full shadow-lg">
-          {matches.length} Live
-        </span>
+        {liveCount > 0 && (
+          <span className="text-xs font-semibold bg-gradient-to-r from-primary to-primary-600 text-white px-3 py-1.5 rounded-full shadow-lg">
+            {liveCount} Live
+          </span>
+        )}
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-        {matches.map((match, index) => (
-          <div
-            key={index}
-            className="glass p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 dark:border-white/10"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold bg-red-600 text-white px-3 py-1.5 rounded-full shadow-md pulse-glow">
-                {match.status === "IN_PLAY" ? "● Live" : "Half Time"}
-              </span>
-              <span className="text-sm font-bold text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-black/30 px-2 py-1 rounded">
-                {match.minute}&apos;
-              </span>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {match.homeTeam}
-                </span>
-                <span className="text-3xl font-black bg-gradient-to-br from-primary to-primary-600 bg-clip-text text-transparent">
-                  {match.homeScore}
-                </span>
-              </div>
-              <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {match.awayTeam}
-                </span>
-                <span className="text-3xl font-black bg-gradient-to-br from-primary to-primary-600 bg-clip-text text-transparent">
-                  {match.awayScore}
-                </span>
-              </div>
-            </div>
-          </div>
+        {displayedMatches.map((match) => (
+          <MatchCard
+            key={match.id}
+            homeTeamName={match.homeTeamName}
+            awayTeamName={match.awayTeamName}
+            homeTeamCrest={match.homeTeamCrest}
+            awayTeamCrest={match.awayTeamCrest}
+            homeScore={match.homeScore}
+            awayScore={match.awayScore}
+            status={match.status}
+            stage={match.stage}
+            scheduledAt={match.scheduledAt}
+          />
         ))}
       </div>
+
+      {hasMany && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-4 w-full py-2 text-sm font-medium text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 transition-colors duration-200 flex items-center justify-center space-x-1 relative z-10"
+        >
+          <span>{isExpanded ? "Show Less" : `Show ${matches.length - 2} More`}</span>
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
