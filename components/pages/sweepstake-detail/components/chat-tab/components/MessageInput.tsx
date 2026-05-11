@@ -20,6 +20,7 @@ export default function MessageInput({ onSendMessage, disabled }: MessageInputPr
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <input
+        name="message"
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}

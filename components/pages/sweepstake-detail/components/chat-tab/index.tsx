@@ -2,8 +2,8 @@ import { useState, useEffect, useOptimistic, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { supabaseClient } from "@/lib/supabase-client";
-import MessageList, { Message } from "./MessageList";
-import MessageInput from "./MessageInput";
+import MessageList, { Message } from "./components/MessageList";
+import MessageInput from "./components/MessageInput";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
 enum ConnectionStatus {
@@ -212,7 +212,7 @@ export default function ChatTab() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-28rem)] max-h-[600px] min-h-[400px]">
+    <div className="flex flex-col h-[calc(100vh-14rem)] max-h-[80vh] min-h-[400px]">
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Chat</h2>
         <div className="flex items-center gap-2">
