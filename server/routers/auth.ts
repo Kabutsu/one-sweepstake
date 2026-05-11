@@ -7,14 +7,26 @@ import { createToken, getAuthCookieOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
 
+function getOriginFromRequest(req?: any): string {
+  if (!req) {
+    return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  }
+
+  const protocol = req.headers["x-forwarded-proto"] || "https";
+  const host = req.headers.host;
+
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
 export const authRouter = router({
   sendMagicLink: publicProcedure
     .input(z.object({ email: z.string().email() }))
-    .mutation(async ({ input }) => {
-      // Build redirect URL dynamically to support Vercel preview deployments
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    .mutation(async ({ input, ctx }) => {
+      const baseUrl = getOriginFromRequest(ctx.req);
 
       const { error } = await supabaseAdmin.auth.signInWithOtp({
         email: input.email.toLowerCase(),
