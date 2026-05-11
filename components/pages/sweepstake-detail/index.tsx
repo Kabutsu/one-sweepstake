@@ -109,7 +109,13 @@ export default function SweepstakeDetail() {
       {/* Tab Content */}
       <div className="glass p-6 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab sweepstake={sweepstake} />}
-        {activeTab === "teams" && <TeamsTab />}
+        {activeTab === "teams" && (
+          <TeamsTab
+            sweepstakeId={sweepstake.id}
+            drawCompletedAt={sweepstake.drawCompletedAt}
+            isCreator={sweepstake.isCreator}
+          />
+        )}
         {activeTab === "chat" && <ChatTab />}
         {activeTab === "participants" && <ParticipantsTab sweepstake={sweepstake} />}
       </div>
