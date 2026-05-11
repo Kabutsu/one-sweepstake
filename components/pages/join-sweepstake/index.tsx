@@ -70,7 +70,7 @@ export default function JoinSweepstake() {
           <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white text-center">
             Join Sweepstake
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-center text-pretty">
             Enter the join code shared with you to participate
           </p>
         </div>
@@ -88,14 +88,14 @@ export default function JoinSweepstake() {
               type="text"
               value={joinCode}
               onChange={handleInputChange}
-              placeholder="Enter code (e.g., ABC123)"
+              placeholder="ABC123"
               className="w-full px-4 py-4 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-center text-2xl font-bold tracking-wider uppercase"
               maxLength={8}
               disabled={joinMutation.isPending}
               autoComplete="off"
               autoFocus
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center text-pretty">
               The code is case-insensitive and typically 6-8 characters
             </p>
           </div>
