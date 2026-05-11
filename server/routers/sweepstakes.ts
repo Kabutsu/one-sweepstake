@@ -342,25 +342,28 @@ export const sweepstakesRouter = router({
         .where(eq(participants.sweepstakeId, input.sweepstakeId));
 
       // Group by participant
-      const grouped = assignments.reduce((acc, assignment) => {
-        if (!acc[assignment.participantId]) {
-          acc[assignment.participantId] = {
-            participantId: assignment.participantId,
-            userId: assignment.userId,
-            displayName: assignment.displayName,
-            avatarUrl: assignment.avatarUrl,
-            teams: [],
-          };
-        }
-        acc[assignment.participantId].teams.push({
-          id: assignment.id,
-          teamId: assignment.teamId,
-          teamName: assignment.teamName,
-          teamLogo: assignment.teamLogo,
-          assignedAt: assignment.assignedAt,
-        });
-        return acc;
-      }, {} as Record<string, any>);
+      const grouped = assignments.reduce(
+        (acc, assignment) => {
+          if (!acc[assignment.participantId]) {
+            acc[assignment.participantId] = {
+              participantId: assignment.participantId,
+              userId: assignment.userId,
+              displayName: assignment.displayName,
+              avatarUrl: assignment.avatarUrl,
+              teams: [],
+            };
+          }
+          acc[assignment.participantId].teams.push({
+            id: assignment.id,
+            teamId: assignment.teamId,
+            teamName: assignment.teamName,
+            teamLogo: assignment.teamLogo,
+            assignedAt: assignment.assignedAt,
+          });
+          return acc;
+        },
+        {} as Record<string, any>
+      );
 
       return Object.values(grouped);
     }),

@@ -2,7 +2,7 @@ import { trpc } from "@/lib/trpc";
 import EmptyState from "@/components/ui/EmptyState";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import DrawTeamsButton from "./components/DrawTeamsButton";
-import { getInitials } from '@/utils/user-utils';
+import { getInitials } from "@/utils/user-utils";
 
 interface TeamsTabProps {
   sweepstakeId: string;
@@ -24,39 +24,35 @@ interface TeamAssignment {
   teams: Team[];
 }
 
-export default function TeamsTab({
-  sweepstakeId,
-  drawCompletedAt,
-  isCreator,
-}: TeamsTabProps) {
+export default function TeamsTab({ sweepstakeId, drawCompletedAt, isCreator }: TeamsTabProps) {
   const { data: currentUser } = trpc.auth.me.useQuery();
-  
+
   const {
     data: teamAssignments,
     isLoading,
     error,
   } = trpc.sweepstakes.getTeamAssignments.useQuery(
     { sweepstakeId },
-    { 
+    {
       enabled: !!drawCompletedAt,
       select: (data) => {
         console.log("Raw team assignments from API:", data);
         return data.sort((a: TeamAssignment, b: TeamAssignment) => {
-        // Sort by:
-        // 1. Current user first
-        if (a.userId === currentUser?.id) return -1;
-        if (b.userId === currentUser?.id) return 1;
-        
-        // 2. Number of teams (descending)
-        if (a.teams.length !== b.teams.length) {
-          return b.teams.length - a.teams.length;
-        }
+          // Sort by:
+          // 1. Current user first
+          if (a.userId === currentUser?.id) return -1;
+          if (b.userId === currentUser?.id) return 1;
 
-        // 3. Alphabetical by display name
-        return (a.displayName || "").localeCompare(b.displayName || "");
-      })
+          // 2. Number of teams (descending)
+          if (a.teams.length !== b.teams.length) {
+            return b.teams.length - a.teams.length;
+          }
+
+          // 3. Alphabetical by display name
+          return (a.displayName || "").localeCompare(b.displayName || "");
+        });
       },
-    },
+    }
   );
 
   // Show loading state while fetching
@@ -131,9 +127,7 @@ export default function TeamsTab({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Team Assignments
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Team Assignments</h3>
         <span className="text-sm text-gray-500 dark:text-gray-400">
           {teamAssignments.length} Participants
         </span>
@@ -166,8 +160,7 @@ export default function TeamsTab({
                   {assignment.displayName || "Unknown User"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {assignment.teams.length}{" "}
-                  {assignment.teams.length === 1 ? "Team" : "Teams"}
+                  {assignment.teams.length} {assignment.teams.length === 1 ? "Team" : "Teams"}
                 </p>
               </div>
             </div>

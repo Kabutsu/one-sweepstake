@@ -136,7 +136,10 @@ export default function MessageList({
           const showUsername =
             !isOwnMessage && (index === 0 || messages[index - 1]?.userId !== msg.userId);
           const showAvatar = index === 0 || messages[index + 1]?.userId !== msg.userId;
-          const isNewDay = index === 0 || new Date(messages[index - 1].createdAt).toDateString() !== new Date(msg.createdAt).toDateString();
+          const isNewDay =
+            index === 0 ||
+            new Date(messages[index - 1].createdAt).toDateString() !==
+              new Date(msg.createdAt).toDateString();
 
           return (
             <div
@@ -159,17 +162,15 @@ export default function MessageList({
                 )
               ) : null}
 
-              <div
-                className={`flex flex-col w-full ${isOwnMessage ? "items-end" : "items-start"}`}
-              >
+              <div className={`flex flex-col w-full ${isOwnMessage ? "items-end" : "items-start"}`}>
                 {isNewDay && (
                   <div className="flex items-center my-4 w-full">
                     <hr className="flex-grow border-gray-300 dark:border-gray-700" />
                     <span className="mx-4 text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(msg.createdAt).toLocaleDateString('en-GB', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
+                      {new Date(msg.createdAt).toLocaleDateString("en-GB", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
                       })}
                     </span>
                     <hr className="flex-grow border-gray-300 dark:border-gray-700" />

@@ -25,7 +25,7 @@ export function loadSeedingData(filePath: string): TeamSeeding[] {
   const jsonPath = path.resolve(process.cwd(), filePath);
   const fileContent = fs.readFileSync(jsonPath, "utf-8");
   const teams: TeamSeeding[] = JSON.parse(fileContent);
-  
+
   return teams;
 }
 
@@ -37,14 +37,11 @@ export async function enrichTeamsFromAPI(
   apiKey: string
 ): Promise<TeamSeeding[]> {
   try {
-    const response = await fetch(
-      "https://api.football-data.org/v4/competitions/2000/teams",
-      {
-        headers: {
-          "X-Auth-Token": apiKey,
-        },
-      }
-    );
+    const response = await fetch("https://api.football-data.org/v4/competitions/2000/teams", {
+      headers: {
+        "X-Auth-Token": apiKey,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Football Data API error: ${response.statusText}`);
@@ -55,11 +52,14 @@ export async function enrichTeamsFromAPI(
 
     // Create a map of TLA to team data from API
     const apiTeamMap = new Map<string, { id: string; name: string; crest: string }>(
-      apiTeams.map((team: any) => [team.tla, {
-        id: team.id.toString(),
-        name: team.name,
-        crest: team.crest,
-      }])
+      apiTeams.map((team: any) => [
+        team.tla,
+        {
+          id: team.id.toString(),
+          name: team.name,
+          crest: team.crest,
+        },
+      ])
     );
 
     // Enrich our seeding data with API data
@@ -92,7 +92,7 @@ export async function updateTournamentSeeding(
   const { db } = await import("../db");
   const { tournaments } = await import("../db/schema");
   const { eq } = await import("drizzle-orm");
-  
+
   await db
     .update(tournaments)
     .set({
@@ -105,13 +105,11 @@ export async function updateTournamentSeeding(
 /**
  * Get tournament seeding configuration
  */
-export async function getTournamentSeeding(
-  tournamentId: string
-): Promise<SeedingConfig | null> {
+export async function getTournamentSeeding(tournamentId: string): Promise<SeedingConfig | null> {
   const { db } = await import("../db");
   const { tournaments } = await import("../db/schema");
   const { eq } = await import("drizzle-orm");
-  
+
   const [tournament] = await db
     .select()
     .from(tournaments)

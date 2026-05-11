@@ -231,7 +231,7 @@ describe("Team Draw Algorithm", () => {
 
         if (rankings.length > 0) {
           const avgRanking = rankings.reduce((sum, r) => sum + r, 0) / rankings.length;
-          
+
           // Average ranking should be reasonably close to middle (24.5)
           // Allow generous range since we're using random distribution
           expect(avgRanking).toBeGreaterThan(10);

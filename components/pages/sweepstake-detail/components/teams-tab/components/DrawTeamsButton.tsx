@@ -7,10 +7,7 @@ interface DrawTeamsButtonProps {
   onDrawComplete?: () => void;
 }
 
-export default function DrawTeamsButton({
-  sweepstakeId,
-  onDrawComplete,
-}: DrawTeamsButtonProps) {
+export default function DrawTeamsButton({ sweepstakeId, onDrawComplete }: DrawTeamsButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const utils = trpc.useUtils();
 
@@ -35,12 +32,7 @@ export default function DrawTeamsButton({
         className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
       >
         <div className="flex items-center justify-center gap-2">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -86,8 +78,7 @@ export default function DrawTeamsButton({
             {/* Content */}
             <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Warning:</strong> This action cannot be undone. Once teams
-                are drawn:
+                <strong>Warning:</strong> This action cannot be undone. Once teams are drawn:
               </p>
               <ul className="mt-2 ml-4 text-sm text-yellow-800 dark:text-yellow-200 space-y-1 list-disc">
                 <li>Teams will be randomly assigned to all participants</li>
