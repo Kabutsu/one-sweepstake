@@ -5,7 +5,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import OverviewTab from "./components/OverviewTab";
 import ParticipantsTab from "./components/ParticipantsTab";
 import TeamsTab from "./components/TeamsTab";
-import ChatTab from "./components/ChatTab";
+import ChatTab from "./components/chat-tab";
 
 type TabType = "overview" | "participants" | "teams" | "chat";
 
@@ -19,6 +19,18 @@ export default function SweepstakeDetail() {
     isLoading,
     error,
   } = trpc.sweepstakes.getSweepstakeById.useQuery({ id: id! }, { enabled: !!id });
+
+  const scrollToTab = (tabId: TabType) => {
+    const element = document.getElementById(`tab-${tabId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId);
+    scrollToTab(tabId);
+  };
 
   if (isLoading) {
     return (
@@ -68,22 +80,23 @@ export default function SweepstakeDetail() {
         <span>Back to Dashboard</span>
       </button>
 
-      <div className="glass p-6 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 mb-6">
+      <div className="glass p-6 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 mb-2 sm:mb-6">
         <h1 className="text-3xl font-bold mb-1 text-gray-900 dark:text-white">{sweepstake.name}</h1>
         <p className="text-gray-600 dark:text-gray-400">{sweepstake.tournamentName}</p>
       </div>
 
       {/* Tabs */}
-      <div className="glass p-2 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 mb-6">
+      <div className="glass p-2 shadow-xl rounded-2xl border border-white/20 dark:border-white/10 mb-2 sm:mb-6">
         <div className="flex space-x-2 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              id={`tab-${tab.id}`}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-semibold transition-all ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-lg"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-black/20"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               }`}
             >
               <span className="hidden sm:inline mr-2">{tab.icon}</span>
