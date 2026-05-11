@@ -133,7 +133,8 @@ export default function MessageList({
 
         {messages.map((msg, index) => {
           const isOwnMessage = msg.userId === currentUserId;
-          const showUsername = !isOwnMessage && (index === 0 || messages[index - 1]?.userId !== msg.userId);
+          const showUsername =
+            !isOwnMessage && (index === 0 || messages[index - 1]?.userId !== msg.userId);
           const showAvatar = index === 0 || messages[index + 1]?.userId !== msg.userId;
 
           return (
@@ -160,7 +161,7 @@ export default function MessageList({
               <div
                 className={`flex flex-col max-w-[70%] ${isOwnMessage ? "items-end" : "items-start"}`}
               >
-                {(!isOwnMessage && showUsername) && (
+                {!isOwnMessage && showUsername && (
                   <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">
                     {msg.displayName || "Anonymous"}
                   </span>
