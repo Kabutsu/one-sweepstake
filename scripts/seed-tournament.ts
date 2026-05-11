@@ -26,11 +26,7 @@ export function loadSeedingData(filePath: string): TeamSeeding[] {
   const fileContent = fs.readFileSync(jsonPath, "utf-8");
   const teams: TeamSeeding[] = JSON.parse(fileContent);
   
-  // Add ranking based on array position (1-indexed)
-  return teams.map((team, index) => ({
-    ...team,
-    ranking: index + 1,
-  }));
+  return teams;
 }
 
 /**
@@ -58,7 +54,7 @@ export async function enrichTeamsFromAPI(
     const apiTeams = data.teams || [];
 
     // Create a map of TLA to team data from API
-    const apiTeamMap = new Map(
+    const apiTeamMap = new Map<string, { id: string; name: string; crest: string }>(
       apiTeams.map((team: any) => [team.tla, {
         id: team.id.toString(),
         name: team.name,
@@ -73,7 +69,7 @@ export async function enrichTeamsFromAPI(
         return {
           ...team,
           id: apiTeam.id,
-          name: apiTeam.name, // Use official API name
+          name: team.name ?? apiTeam.name, // Use official API name if not provided
           crest: apiTeam.crest, // Use official API crest URL
         };
       }
