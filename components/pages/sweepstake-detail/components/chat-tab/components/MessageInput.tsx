@@ -26,7 +26,7 @@ export default function MessageInput({ onSendMessage, disabled }: MessageInputPr
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type a message..."
         disabled={disabled}
-        className="flex-1 px-4 py-3 bg-white/50 dark:bg-black/20 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="flex-1 min-w-0 px-4 py-3 bg-white/50 dark:bg-black/20 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         maxLength={1000}
       />
       <button
