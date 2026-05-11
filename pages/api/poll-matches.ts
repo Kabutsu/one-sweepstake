@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { updateMatchCache } from "@/lib/match-cache";
+import { updateMatchCache, getPollingRecommendation } from "@/lib/match-cache";
 import { db } from "@/db";
 import { tournaments } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -32,20 +32,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const results = [];
 
     for (const tournament of activeTournaments) {
-      const now = new Date();
-      const startDate = new Date(tournament.startDate);
-      const endDate = new Date(tournament.endDate);
+      const recommendation = await getPollingRecommendation(tournament.id);
 
-      // Start caching matches 30 days before tournament starts
-      const cacheStartDate = new Date(startDate);
-      cacheStartDate.setDate(cacheStartDate.getDate() - 30);
-
-      if (now < cacheStartDate || now > endDate) {
+      if (!recommendation.shouldPoll) {
         results.push({
           tournamentId: tournament.id,
           tournamentName: tournament.name,
           skipped: true,
-          reason: "Outside caching window (30 days before start to end date)",
+          reason: recommendation.reason,
+          phase: recommendation.tournamentPhase,
         });
         continue;
       }
@@ -55,12 +50,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         results.push({
           tournamentId: tournament.id,
           tournamentName: tournament.name,
+          phase: recommendation.tournamentPhase,
+          recommendedIntervalMinutes: recommendation.intervalMinutes,
           ...result,
         });
       } catch (error) {
         results.push({
           tournamentId: tournament.id,
           tournamentName: tournament.name,
+          phase: recommendation.tournamentPhase,
           error: error instanceof Error ? error.message : String(error),
         });
       }
