@@ -180,7 +180,9 @@ export const sweepstakesRouter = router({
 
       // Check if draw has been completed
       if (sweepstake.drawCompletedAt) {
-        throw new Error("This sweepstake has already been drawn and cannot accept new participants.");
+        throw new Error(
+          "This sweepstake has already been drawn and cannot accept new participants."
+        );
       }
 
       // Check if sweepstake is full
@@ -192,7 +194,9 @@ export const sweepstakesRouter = router({
       const [existingParticipant] = await db
         .select()
         .from(participants)
-        .where(and(eq(participants.sweepstakeId, sweepstake.id), eq(participants.userId, ctx.user.id)))
+        .where(
+          and(eq(participants.sweepstakeId, sweepstake.id), eq(participants.userId, ctx.user.id))
+        )
         .limit(1);
 
       if (existingParticipant) {
