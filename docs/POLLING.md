@@ -5,7 +5,7 @@
 The match caching system automatically adapts its polling frequency based on tournament status:
 
 - **Pre-tournament** (30 days before → start): Poll once per day
-- **Active tournament** (start → end): Poll every 2 minutes  
+- **Active tournament** (start → end): Poll every 2 minutes
 - **Post-tournament** (end → 2 days after): Poll once per day
 - **Outside window**: No polling
 
@@ -18,17 +18,20 @@ Old matches (>30 days after completion) are automatically cleaned up to save dat
 Returns recommended polling intervals for all active tournaments.
 
 **Response:**
+
 ```json
 {
   "recommendedIntervalMinutes": 2,
-  "tournaments": [{
-    "tournamentId": "...",
-    "tournamentName": "FIFA World Cup",
-    "shouldPoll": true,
-    "intervalMinutes": 2,
-    "reason": "Tournament in progress: frequent polling for live scores",
-    "tournamentPhase": "active"
-  }]
+  "tournaments": [
+    {
+      "tournamentId": "...",
+      "tournamentName": "FIFA World Cup",
+      "shouldPoll": true,
+      "intervalMinutes": 2,
+      "reason": "Tournament in progress: frequent polling for live scores",
+      "tournamentPhase": "active"
+    }
+  ]
 }
 ```
 
@@ -37,24 +40,28 @@ Returns recommended polling intervals for all active tournaments.
 Fetches and caches matches from Football Data API. Requires authentication.
 
 **Headers:**
+
 ```
 Authorization: Bearer <CRON_SECRET>
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Match polling completed",
   "timestamp": "2026-06-11T12:00:00Z",
-  "results": [{
-    "tournamentId": "...",
-    "tournamentName": "FIFA World Cup",
-    "phase": "active",
-    "recommendedIntervalMinutes": 2,
-    "created": 5,
-    "updated": 67,
-    "deleted": 2
-  }]
+  "results": [
+    {
+      "tournamentId": "...",
+      "tournamentName": "FIFA World Cup",
+      "phase": "active",
+      "recommendedIntervalMinutes": 2,
+      "created": 5,
+      "updated": 67,
+      "deleted": 2
+    }
+  ]
 }
 ```
 
@@ -63,6 +70,7 @@ Authorization: Bearer <CRON_SECRET>
 ### 1. Vercel Cron (Recommended for Vercel deployments)
 
 Create `vercel.json`:
+
 ```json
 {
   "crons": [
@@ -79,13 +87,14 @@ Create `vercel.json`:
 ### 2. GitHub Actions (Adaptive polling)
 
 Create `.github/workflows/poll-matches.yml`:
+
 ```yaml
 name: Poll Match Data
 
 on:
   schedule:
     # Check every 2 hours to see if we should poll
-    - cron: '0 */2 * * *'
+    - cron: "0 */2 * * *"
   workflow_dispatch: # Allow manual triggers
 
 jobs:
@@ -113,12 +122,14 @@ jobs:
 For adaptive polling, create two jobs:
 
 **Job 1: Pre-tournament (Once daily at 3am)**
+
 - URL: `https://yourdomain.com/api/poll-matches`
 - Schedule: `0 3 * * *`
 - Header: `Authorization: Bearer <CRON_SECRET>`
 - Active: May 12 - June 10, 2026
 
 **Job 2: Active tournament (Every 2 minutes)**
+
 - URL: `https://yourdomain.com/api/poll-matches`
 - Schedule: `*/2 * * * *`
 - Header: `Authorization: Bearer <CRON_SECRET>`
@@ -127,11 +138,13 @@ For adaptive polling, create two jobs:
 ### 4. Manual Polling
 
 For development or one-off updates:
+
 ```bash
 pnpm cache:populate
 ```
 
 Or hit the endpoint directly:
+
 ```bash
 curl -X POST http://localhost:3000/api/poll-matches \
   -H "Authorization: Bearer your-cron-secret"
@@ -146,6 +159,7 @@ FOOTBALL_DATA_API_KEY=your-football-data-api-key
 ```
 
 Generate a secure `CRON_SECRET`:
+
 ```bash
 openssl rand -base64 32
 ```
@@ -153,6 +167,7 @@ openssl rand -base64 32
 ## Monitoring
 
 Check polling status:
+
 ```bash
 curl https://yourdomain.com/api/polling-recommendation
 ```

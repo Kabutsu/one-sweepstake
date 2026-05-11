@@ -43,9 +43,7 @@ export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps)
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-1">
-              No Matches Available
-            </h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-1">No Matches Available</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Matches will appear here when they&apos;re scheduled or in progress
             </p>
@@ -55,9 +53,7 @@ export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps)
     );
   }
 
-  const liveCount = matches.filter(
-    (m) => m.status === "IN_PLAY" || m.status === "PAUSED"
-  ).length;
+  const liveCount = matches.filter((m) => m.status === "IN_PLAY" || m.status === "PAUSED").length;
 
   const hasMany = matches.length > 2;
   const displayedMatches = hasMany && !isExpanded ? matches.slice(0, 2) : matches;

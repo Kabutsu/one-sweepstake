@@ -27,12 +27,15 @@ function formatMatchStatus(status: string, scheduledAt: Date): { label: string; 
       return { label: "Half Time", isLive: true };
     case "SCHEDULED":
     case "TIMED":
-      return { label: new Date(scheduledAt).toLocaleString("en-GB", {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      }), isLive: false };
+      return {
+        label: new Date(scheduledAt).toLocaleString("en-GB", {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isLive: false,
+      };
     case "FINISHED":
       return { label: "Full Time", isLive: false };
     default:

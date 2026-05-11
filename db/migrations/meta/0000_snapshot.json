@@ -78,12 +78,8 @@
           "name": "chat_messages_sweepstake_id_sweepstakes_id_fk",
           "tableFrom": "chat_messages",
           "tableTo": "sweepstakes",
-          "columnsFrom": [
-            "sweepstake_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sweepstake_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -91,12 +87,8 @@
           "name": "chat_messages_user_id_users_id_fk",
           "tableFrom": "chat_messages",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -261,12 +253,8 @@
           "name": "match_cache_tournament_id_tournaments_id_fk",
           "tableFrom": "match_cache",
           "tableTo": "tournaments",
-          "columnsFrom": [
-            "tournament_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tournament_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -276,9 +264,7 @@
         "match_cache_api_match_id_unique": {
           "name": "match_cache_api_match_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "api_match_id"
-          ]
+          "columns": ["api_match_id"]
         }
       },
       "policies": {},
@@ -353,12 +339,8 @@
           "name": "participants_sweepstake_id_sweepstakes_id_fk",
           "tableFrom": "participants",
           "tableTo": "sweepstakes",
-          "columnsFrom": [
-            "sweepstake_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sweepstake_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -366,12 +348,8 @@
           "name": "participants_user_id_users_id_fk",
           "tableFrom": "participants",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -381,10 +359,7 @@
         "unique_sweepstake_user": {
           "name": "unique_sweepstake_user",
           "nullsNotDistinct": false,
-          "columns": [
-            "sweepstake_id",
-            "user_id"
-          ]
+          "columns": ["sweepstake_id", "user_id"]
         }
       },
       "policies": {},
@@ -504,12 +479,8 @@
           "name": "sweepstakes_tournament_id_tournaments_id_fk",
           "tableFrom": "sweepstakes",
           "tableTo": "tournaments",
-          "columnsFrom": [
-            "tournament_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tournament_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -517,12 +488,8 @@
           "name": "sweepstakes_creator_id_users_id_fk",
           "tableFrom": "sweepstakes",
           "tableTo": "users",
-          "columnsFrom": [
-            "creator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["creator_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -532,9 +499,7 @@
         "sweepstakes_join_code_unique": {
           "name": "sweepstakes_join_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "join_code"
-          ]
+          "columns": ["join_code"]
         }
       },
       "policies": {},
@@ -606,12 +571,8 @@
           "name": "team_assignments_participant_id_participants_id_fk",
           "tableFrom": "team_assignments",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -621,10 +582,7 @@
         "unique_participant_team": {
           "name": "unique_participant_team",
           "nullsNotDistinct": false,
-          "columns": [
-            "participant_id",
-            "team_id"
-          ]
+          "columns": ["participant_id", "team_id"]
         }
       },
       "policies": {},
@@ -719,16 +677,12 @@
         "tournaments_slug_unique": {
           "name": "tournaments_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         },
         "tournaments_api_id_unique": {
           "name": "tournaments_api_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "api_id"
-          ]
+          "columns": ["api_id"]
         }
       },
       "policies": {},
@@ -792,16 +746,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_display_name_unique": {
           "name": "users_display_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "display_name"
-          ]
+          "columns": ["display_name"]
         }
       },
       "policies": {},
