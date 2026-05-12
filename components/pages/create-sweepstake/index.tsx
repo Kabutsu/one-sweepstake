@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -46,6 +46,10 @@ export default function CreateSweepstake() {
       tournamentId: tournament.id,
     });
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   if (tournamentLoading) {
     return (
