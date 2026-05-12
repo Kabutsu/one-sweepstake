@@ -1,10 +1,18 @@
 import { router, protectedProcedure } from "../trpc";
 import { db } from "@/db";
-import { sweepstakes, participants, users, tournaments, teamAssignments } from "@/db/schema";
+import {
+  sweepstakes,
+  participants,
+  users,
+  tournaments,
+  teamAssignments,
+  matchCache,
+} from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw } from "@/utils/draw-algorithm";
 import { SeedingConfig } from "@/scripts/seed-tournament";
+import { getEliminationStatus, Match } from "@/lib/elimination-tracker";
 
 const WC_CODE = "fifa-world-cup";
 
@@ -325,6 +333,28 @@ export const sweepstakesRouter = router({
         throw new Error("You are not a participant in this sweepstake");
       }
 
+      // Get sweepstake with tournament info
+      const [sweepstake] = await db
+        .select({
+          tournamentId: sweepstakes.tournamentId,
+        })
+        .from(sweepstakes)
+        .where(eq(sweepstakes.id, input.sweepstakeId))
+        .limit(1);
+
+      if (!sweepstake) {
+        throw new Error("Sweepstake not found");
+      }
+
+      // Get all matches for the tournament to calculate elimination status
+      const matches = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
+
+      // Calculate elimination status for all teams
+      const eliminationStatus = getEliminationStatus(matches as Match[]);
+
       // Get all team assignments for this sweepstake
       const assignments = await db
         .select({
@@ -343,7 +373,7 @@ export const sweepstakesRouter = router({
         .innerJoin(users, eq(participants.userId, users.id))
         .where(eq(participants.sweepstakeId, input.sweepstakeId));
 
-      // Group by participant
+      // Group by participant and include elimination status
       const grouped = assignments.reduce(
         (acc, assignment) => {
           if (!acc[assignment.participantId]) {
@@ -361,6 +391,7 @@ export const sweepstakesRouter = router({
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
             assignedAt: assignment.assignedAt,
+            isEliminated: eliminationStatus.get(assignment.teamId) || false,
           });
           return acc;
         },

@@ -27,7 +27,7 @@ export default function AppHeader() {
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-lg rounded">
               <span className="text-white font-black text-lg">OS</span>
             </div>
-            <div className="hidden sm:block">
+            <div>
               <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight min-w-max">
                 ONE SWEEPSTAKE
               </div>
