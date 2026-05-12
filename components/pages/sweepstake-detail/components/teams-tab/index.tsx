@@ -45,8 +45,8 @@ export default function TeamsTab({ sweepstakeId, drawCompletedAt, isCreator }: T
           if (b.userId === currentUser?.id) return 1;
 
           // 2. Number of remaining teams (ascending)
-          const aEliminatedCount = a.teams.filter(x => x.isEliminated).length;
-          const bEliminatedCount = b.teams.filter(x => x.isEliminated).length;
+          const aEliminatedCount = a.teams.filter((x) => x.isEliminated).length;
+          const bEliminatedCount = b.teams.filter((x) => x.isEliminated).length;
           if (aEliminatedCount !== bEliminatedCount) {
             return aEliminatedCount - bEliminatedCount;
           }
