@@ -6,8 +6,9 @@ import OverviewTab from "./components/OverviewTab";
 import ParticipantsTab from "./components/ParticipantsTab";
 import TeamsTab from "./components/teams-tab";
 import ChatTab from "./components/chat-tab";
+import LeaderboardTab from "./components/LeaderboardTab";
 
-type TabType = "overview" | "participants" | "teams" | "chat";
+type TabType = "overview" | "leaderboard" | "teams" | "participants" | "chat";
 
 export default function SweepstakeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +64,7 @@ export default function SweepstakeDetail() {
 
   const tabs = [
     { id: "overview" as TabType, label: "Overview", icon: "📊" },
+    { id: "leaderboard" as TabType, label: "Leaderboard", icon: "🏆" },
     { id: "teams" as TabType, label: "Teams", icon: "⚽" },
     { id: "chat" as TabType, label: "Chat", icon: "💬" },
     { id: "participants" as TabType, label: "Participants", icon: "👥" },
@@ -109,6 +111,9 @@ export default function SweepstakeDetail() {
       {/* Tab Content */}
       <div className="bg-white/70 dark:bg-black/50 p-6 shadow-xl rounded-2xl border border-white/30 dark:border-white/10 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab sweepstake={sweepstake} />}
+        {activeTab === "leaderboard" && (
+          <LeaderboardTab sweepstakeId={sweepstake.id} tournamentId={sweepstake.tournamentId} />
+        )}
         {activeTab === "teams" && (
           <TeamsTab
             sweepstakeId={sweepstake.id}

@@ -8,11 +8,17 @@ import {
   teamAssignments,
   matchCache,
 } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lte, gte } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw } from "@/utils/draw-algorithm";
 import { SeedingConfig } from "@/scripts/seed-tournament";
 import { getEliminationStatus, Match } from "@/lib/elimination-tracker";
+import {
+  calculateLeaderboard,
+  getAllGroupStandings,
+  getTeamStandings,
+  getTopRankedTeams,
+} from "@/lib/leaderboard";
 
 const WC_CODE = "fifa-world-cup";
 
@@ -400,4 +406,185 @@ export const sweepstakesRouter = router({
 
       return Object.values(grouped);
     }),
+
+  getLeaderboard: protectedProcedure
+    .input(z.object({ sweepstakeId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      // Verify user is a participant
+      const [participant] = await db
+        .select()
+        .from(participants)
+        .where(
+          and(
+            eq(participants.sweepstakeId, input.sweepstakeId),
+            eq(participants.userId, ctx.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!participant) {
+        throw new Error("You are not a participant in this sweepstake");
+      }
+
+      // Get sweepstake with tournament info
+      const [sweepstake] = await db
+        .select({
+          tournamentId: sweepstakes.tournamentId,
+        })
+        .from(sweepstakes)
+        .where(eq(sweepstakes.id, input.sweepstakeId))
+        .limit(1);
+
+      if (!sweepstake) {
+        throw new Error("Sweepstake not found");
+      }
+
+      // Get all matches for elimination calculation
+      const matches = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
+
+      const eliminationStatus = getEliminationStatus(matches as Match[]);
+
+      // Get all team assignments
+      const assignments = await db
+        .select({
+          id: teamAssignments.id,
+          participantId: teamAssignments.participantId,
+          teamId: teamAssignments.teamId,
+          teamName: teamAssignments.teamName,
+          teamLogo: teamAssignments.teamLogo,
+          userId: participants.userId,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(teamAssignments)
+        .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
+        .innerJoin(users, eq(participants.userId, users.id))
+        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+
+      // Group by participant
+      const grouped = assignments.reduce(
+        (acc, assignment) => {
+          if (!acc[assignment.participantId]) {
+            acc[assignment.participantId] = {
+              participantId: assignment.participantId,
+              userId: assignment.userId,
+              displayName: assignment.displayName,
+              avatarUrl: assignment.avatarUrl,
+              teams: [],
+            };
+          }
+          acc[assignment.participantId].teams.push({
+            teamId: assignment.teamId,
+            teamName: assignment.teamName,
+            teamLogo: assignment.teamLogo,
+            isEliminated: eliminationStatus.get(assignment.teamId) || false,
+          });
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+
+      const participantsData = Object.values(grouped);
+      const leaderboard = calculateLeaderboard(participantsData);
+
+      return leaderboard;
+    }),
+
+  getGroupStandings: protectedProcedure
+    .input(z.object({ tournamentId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      // Get all matches for the tournament
+      const matches = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, input.tournamentId));
+
+      const groupStandings = getAllGroupStandings(matches as Match[]);
+
+      // Convert Map to object for JSON serialization
+      const standingsObject: Record<string, any[]> = {};
+      for (const [group, standings] of groupStandings) {
+        standingsObject[group] = standings;
+      }
+
+      return standingsObject;
+    }),
+
+  getDashboardSummary: protectedProcedure.query(async ({ ctx }) => {
+    // Get user's sweepstakes that have been drawn
+    const userSweepstakes = await db
+      .select({
+        sweepstakeId: sweepstakes.id,
+        tournamentId: sweepstakes.tournamentId,
+        tournamentEndDate: tournaments.endDate,
+        participantId: participants.id,
+      })
+      .from(participants)
+      .innerJoin(sweepstakes, eq(participants.sweepstakeId, sweepstakes.id))
+      .innerJoin(tournaments, eq(sweepstakes.tournamentId, tournaments.id))
+      .where(eq(participants.userId, ctx.user.id));
+
+    // Filter to active sweepstakes (drawn and tournament hasn't ended)
+    const now = new Date();
+    const activeSweepstakes = userSweepstakes.filter(
+      (s) => s.tournamentEndDate && new Date(s.tournamentEndDate) > now
+    );
+
+    if (activeSweepstakes.length === 0) {
+      return {
+        totalTeamsRemaining: 0,
+        topTeams: [],
+        activeSweepstakes: 0,
+      };
+    }
+
+    // Get all team assignments for active sweepstakes
+    let allUserTeams: any[] = [];
+    let allMatches: Match[] = [];
+
+    for (const sweepstake of activeSweepstakes) {
+      const matches = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
+
+      if (allMatches.length === 0) {
+        allMatches = matches as Match[];
+      }
+
+      const eliminationStatus = getEliminationStatus(matches as Match[]);
+
+      const assignments = await db
+        .select({
+          teamId: teamAssignments.teamId,
+          teamName: teamAssignments.teamName,
+          teamLogo: teamAssignments.teamLogo,
+        })
+        .from(teamAssignments)
+        .where(eq(teamAssignments.participantId, sweepstake.participantId));
+
+      const teamsWithStatus = assignments.map((a) => ({
+        ...a,
+        isEliminated: eliminationStatus.get(a.teamId) || false,
+      }));
+
+      allUserTeams = [...allUserTeams, ...teamsWithStatus];
+    }
+
+    // Remove duplicates
+    const uniqueTeams = Array.from(new Map(allUserTeams.map((t) => [t.teamId, t])).values());
+
+    const teamsRemaining = uniqueTeams.filter((t) => !t.isEliminated).length;
+    const teamStandings = getTeamStandings(allMatches, uniqueTeams);
+    const topTeams = getTopRankedTeams(teamStandings, 3);
+
+    return {
+      totalTeamsRemaining: teamsRemaining,
+      topTeams,
+      activeSweepstakes: activeSweepstakes.length,
+    };
+  }),
 });

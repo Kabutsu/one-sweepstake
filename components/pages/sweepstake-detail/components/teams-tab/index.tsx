@@ -63,6 +63,12 @@ export default function TeamsTab({ sweepstakeId, drawCompletedAt, isCreator }: T
     }
   );
 
+  // Fetch leaderboard to determine winner/runner-up
+  const { data: leaderboard } = trpc.sweepstakes.getLeaderboard.useQuery(
+    { sweepstakeId },
+    { enabled: !!drawCompletedAt }
+  );
+
   // Show loading state while fetching
   if (isLoading) {
     return (
@@ -146,15 +152,18 @@ export default function TeamsTab({ sweepstakeId, drawCompletedAt, isCreator }: T
         {teamAssignments.map((assignment: TeamAssignment) => {
           const allTeamsEliminated = assignment.teams.every((t) => t.isEliminated);
           const hasEliminatedTeam = assignment.teams.some((t) => t.isEliminated);
+          const isWinner = leaderboard?.winner?.participantId === assignment.participantId;
+          const isRunnerUp = leaderboard?.runnerUp?.participantId === assignment.participantId;
 
           return (
             <div
               key={assignment.participantId}
               className={`
                 bg-white dark:bg-black/50 backdrop-blur-lg p-4 rounded-xl
-                border border-gray-200/50 dark:border-gray-700/50
                 hover:shadow-lg transition-all duration-200
                 ${allTeamsEliminated ? "opacity-60" : ""}
+                ${isWinner ? "border-4 border-yellow-400 dark:border-yellow-500 shadow-2xl shadow-yellow-500/50" : "border border-gray-200/50 dark:border-gray-700/50"}
+                ${isRunnerUp && !isWinner ? "border-2 border-gray-400 dark:border-gray-500" : ""}
               `}
             >
               {/* Participant Header */}
@@ -171,11 +180,33 @@ export default function TeamsTab({ sweepstakeId, drawCompletedAt, isCreator }: T
                       {getInitials(assignment.displayName || "🥸")}
                     </div>
                   )}
+                  {isWinner && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs">
+                      🏆
+                    </div>
+                  )}
+                  {isRunnerUp && !isWinner && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-xs">
+                      🥈
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 dark:text-white truncate">
-                    {assignment.displayName || "Unknown User"}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                      {assignment.displayName || "Unknown User"}
+                    </p>
+                    {isWinner && (
+                      <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">
+                        Winner
+                      </span>
+                    )}
+                    {isRunnerUp && !isWinner && (
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                        2nd
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {assignment.teams.length} {assignment.teams.length === 1 ? "Team" : "Teams"}
                     {hasEliminatedTeam && (

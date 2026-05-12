@@ -3,6 +3,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import LiveMatchesSection from "./components/LiveMatchesSection";
 import SweepstakeTile from "./components/SweepstakeTile";
 import ActionBar from "./components/ActionBar";
+import DashboardStandingsSummary from "./components/DashboardStandingsSummary";
 import { mockSweepstakes } from "@/mocks/dashboardData";
 
 const emptySweepstakes: typeof mockSweepstakes = [];
@@ -39,6 +40,8 @@ export default function Dashboard() {
           Here&apos;s what&apos;s happening with your sweepstakes
         </p>
       </div>
+
+      <DashboardStandingsSummary />
 
       <LiveMatchesSection matches={displayMatches} />
 
