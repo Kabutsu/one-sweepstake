@@ -189,11 +189,7 @@ export default function StandingsTab({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {tournamentActive && (
-                        <ProfileCircle
-                          displayName={null}
-                          showRank={participant.rank}
-                          size="lg"
-                        />
+                        <ProfileCircle displayName={null} showRank={participant.rank} size="lg" />
                       )}
                       <ProfileCircle
                         avatarUrl={participant.avatarUrl}

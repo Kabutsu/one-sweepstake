@@ -6,7 +6,7 @@ interface ProfileCircleProps {
   avatarUrl?: string | null;
   displayName: string | null;
   userId?: string | null;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "squish" | "md" | "lg" | "xl";
   showRank?: number;
   grayscale?: boolean;
   className?: string;
@@ -14,6 +14,7 @@ interface ProfileCircleProps {
 
 const sizeClasses = {
   sm: "w-6 h-6 text-xs",
+  squish: "w-8 h-[1.75rem] sm:h-[1.85rem] text-sm",
   md: "w-8 h-8 text-sm",
   lg: "w-10 h-10 text-base",
   xl: "w-12 h-12 text-lg",

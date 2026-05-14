@@ -40,10 +40,10 @@ export default function ProfileSetup() {
       return;
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (1MB max)
+    const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
-      setUploadError("Image must be smaller than 5MB.");
+      setUploadError("Image must be smaller than 1MB.");
       setSelectedFile(null);
       setPreviewUrl(null);
       return;
@@ -134,8 +134,7 @@ export default function ProfileSetup() {
     uploadError ||
     (setupProfile.isError ? "Failed to save profile. Please try again." : null);
   const displayNameLength = displayName.length;
-  const isButtonDisabled =
-    setupProfile.isPending || getUploadUrl.isPending || !displayName.trim();
+  const isButtonDisabled = setupProfile.isPending || getUploadUrl.isPending || !displayName.trim();
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background-light to-gray-100 dark:from-background-dark dark:to-gray-900">
@@ -174,7 +173,7 @@ export default function ProfileSetup() {
               className="hidden"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-              JPG, PNG, or WebP • Max 5MB • This can only be set once
+              JPG, PNG, or WebP • Max 1MB • This can only be set once
             </p>
           </div>
 

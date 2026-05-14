@@ -152,7 +152,7 @@ export default function MessageList({
                     avatarUrl={msg.avatarUrl}
                     displayName={msg.displayName}
                     userId={msg.userId}
-                    size="md"
+                    size="squish"
                     className="mb-1"
                   />
                 ) : (
