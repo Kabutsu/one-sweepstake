@@ -120,7 +120,7 @@ export const sweepstakesRouter = router({
       // Compute tournament active state based on dates and isActive flag
       const now = new Date();
       const tournamentHasStarted = sweepstake.tournamentStartDate <= now;
-      const tournamentActive = sweepstake.tournamentIsActive && tournamentHasStarted;
+      const tournamentActive = sweepstake.tournamentIsActive || tournamentHasStarted;
 
       return {
         ...sweepstake,

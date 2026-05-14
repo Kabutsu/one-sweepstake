@@ -1,10 +1,14 @@
 import { trpc } from "@/lib/trpc";
+import { LeaderboardParticipant } from "@/lib/leaderboard";
+
+import { getInitials } from "@/utils/user-utils";
+
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import EliminationBadge from "@/components/ui/EliminationBadge";
-import GroupStandingsTable from "./GroupStandingsTable";
+
 import DrawTeamsButton from "./teams-tab/components/DrawTeamsButton";
-import { getInitials } from "@/utils/user-utils";
+import GroupStandingsTable from "./GroupStandingsTable";
 
 interface StandingsTabProps {
   sweepstakeId: string;
@@ -21,8 +25,48 @@ export default function StandingsTab({
   drawCompletedAt,
   isCreator,
 }: StandingsTabProps) {
+  const { data: currentUser } = trpc.auth.me.useQuery();
+
   const { data: leaderboard, isLoading: leaderboardLoading } =
-    trpc.sweepstakes.getLeaderboard.useQuery({ sweepstakeId });
+    trpc.sweepstakes.getLeaderboard.useQuery(
+      { sweepstakeId },
+      {
+        select: (data) => {
+          // If tournament is active, return in rank order
+          if (tournamentActive) return data;
+
+          // Otherwise, rank assignements with current user first, then by number of teams, then alphabetically
+          const ranked = [...data.stillIn];
+
+          ranked.sort((a: LeaderboardParticipant, b: LeaderboardParticipant) => {
+            // Sort by:
+            // 1. Current user first
+            if (a.userId === currentUser?.id) return -1;
+            if (b.userId === currentUser?.id) return 1;
+
+            // 2. Number of remaining teams (ascending)
+            const aEliminatedCount = a.teams.filter((x) => x.isEliminated).length;
+            const bEliminatedCount = b.teams.filter((x) => x.isEliminated).length;
+            if (aEliminatedCount !== bEliminatedCount) {
+              return aEliminatedCount - bEliminatedCount;
+            }
+
+            // 3. Total number of teams (descending)
+            if (a.teams.length !== b.teams.length) {
+              return b.teams.length - a.teams.length;
+            }
+
+            // 4. Alphabetical by display name
+            return (a.displayName || "").localeCompare(b.displayName || "");
+          });
+
+          return {
+            ...data,
+            stillIn: ranked,
+          };
+        },
+      }
+    );
 
   const { data: groupStandings, isLoading: standingsLoading } =
     trpc.sweepstakes.getGroupStandings.useQuery({ tournamentId });
@@ -130,7 +174,7 @@ export default function StandingsTab({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {tournamentActive && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-lg">
                           #{participant.rank}
                         </div>
                       )}
@@ -138,10 +182,10 @@ export default function StandingsTab({
                         <img
                           src={participant.avatarUrl}
                           alt={participant.displayName || "User"}
-                          className="w-10 h-10 rounded-full"
+                          className="w-8 h-8 rounded-full"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">
                           {getInitials(participant.displayName || "🥸")}
                         </div>
                       )}
