@@ -4,10 +4,10 @@ import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import OverviewTab from "./components/OverviewTab";
 import ParticipantsTab from "./components/ParticipantsTab";
-import TeamsTab from "./components/teams-tab";
 import ChatTab from "./components/chat-tab";
+import StandingsTab from "./components/standings-tab";
 
-type TabType = "overview" | "participants" | "teams" | "chat";
+type TabType = "overview" | "standings" | "participants" | "chat";
 
 export default function SweepstakeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -63,7 +63,7 @@ export default function SweepstakeDetail() {
 
   const tabs = [
     { id: "overview" as TabType, label: "Overview", icon: "📊" },
-    { id: "teams" as TabType, label: "Teams", icon: "⚽" },
+    { id: "standings" as TabType, label: "Standings", icon: "🏆" },
     { id: "chat" as TabType, label: "Chat", icon: "💬" },
     { id: "participants" as TabType, label: "Participants", icon: "👥" },
   ];
@@ -93,7 +93,7 @@ export default function SweepstakeDetail() {
               key={tab.id}
               id={`tab-${tab.id}`}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-semibold transition-all ${
+              className={`scroll-mt-20 flex-1 min-w-[120px] px-4 py-3 rounded-xl font-semibold transition-all ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-lg"
                   : "text-gray-600 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -109,9 +109,11 @@ export default function SweepstakeDetail() {
       {/* Tab Content */}
       <div className="bg-white/70 dark:bg-black/50 p-6 shadow-xl rounded-2xl border border-white/30 dark:border-white/10 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab sweepstake={sweepstake} />}
-        {activeTab === "teams" && (
-          <TeamsTab
+        {activeTab === "standings" && (
+          <StandingsTab
             sweepstakeId={sweepstake.id}
+            tournamentId={sweepstake.tournamentId}
+            tournamentActive={sweepstake.tournamentActive}
             drawCompletedAt={sweepstake.drawCompletedAt}
             isCreator={sweepstake.isCreator}
           />
