@@ -131,8 +131,42 @@ export const authRouter = router({
       };
     }),
 
+  getUploadUrl: protectedProcedure.mutation(async ({ ctx }) => {
+    const fileName = `${ctx.user.id}-${Date.now()}`;
+    const filePath = `avatars/${fileName}`;
+
+    // Generate a signed upload URL (valid for 5 minutes)
+    const { data, error } = await supabaseAdmin.storage
+      .from("profile-images")
+      .createSignedUploadUrl(filePath);
+
+    if (error) {
+      // Provide helpful error messages
+      const errorMessage =
+        error.message?.includes("does not exist") || error.message?.includes("not found")
+          ? "Profile images bucket not configured. Please create a 'profile-images' bucket in Supabase Storage."
+          : `Failed to generate upload URL: ${error.message}`;
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: errorMessage,
+      });
+    }
+
+    // Return the signed URL and the path for later retrieval
+    return {
+      uploadUrl: data.signedUrl,
+      filePath: data.path,
+    };
+  }),
+
   setupProfile: protectedProcedure
-    .input(z.object({ displayName: z.string().min(1).max(50).trim() }))
+    .input(
+      z.object({
+        displayName: z.string().min(1).max(50).trim(),
+        avatarUrl: z.string().url().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       // Check if display name is already taken
       const existingUser = await db
@@ -150,7 +184,10 @@ export const authRouter = router({
 
       const [updatedUser] = await db
         .update(users)
-        .set({ displayName: input.displayName })
+        .set({
+          displayName: input.displayName,
+          ...(input.avatarUrl && { avatarUrl: input.avatarUrl }),
+        })
         .where(eq(users.id, ctx.user.id))
         .returning();
 

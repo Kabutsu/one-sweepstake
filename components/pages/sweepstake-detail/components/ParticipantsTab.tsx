@@ -1,4 +1,4 @@
-import { getInitials } from "@/utils/user-utils";
+import ProfileCircle from "@/components/ui/ProfileCircle";
 
 interface Participant {
   id: string;
@@ -35,9 +35,12 @@ export default function ParticipantsTab({ sweepstake }: ParticipantsTabProps) {
             className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-black/20 rounded-xl hover:bg-white/80 dark:hover:bg-black/30 transition-colors"
           >
             <div className="flex items-center space-x-3 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {getInitials(participant.displayName)}
-              </div>
+              <ProfileCircle
+                avatarUrl={participant.avatarUrl}
+                displayName={participant.displayName}
+                userId={participant.userId}
+                size="xl"
+              />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {participant.displayName || "Anonymous"}

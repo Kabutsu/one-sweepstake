@@ -1,11 +1,10 @@
 import { trpc } from "@/lib/trpc";
 import { LeaderboardParticipant } from "@/lib/leaderboard";
 
-import { getInitials } from "@/utils/user-utils";
-
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import EliminationBadge from "@/components/ui/EliminationBadge";
+import ProfileCircle from "@/components/ui/ProfileCircle";
 
 import DrawTeamsButton from "./components/DrawTeamsButton";
 import GroupStandingsTable from "./components/GroupStandingsTable";
@@ -190,21 +189,14 @@ export default function StandingsTab({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {tournamentActive && (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-300 to-primary-500 flex items-center justify-center text-white font-bold text-lg">
-                          #{participant.rank}
-                        </div>
+                        <ProfileCircle displayName={null} showRank={participant.rank} size="lg" />
                       )}
-                      {participant.avatarUrl ? (
-                        <img
-                          src={participant.avatarUrl}
-                          alt={participant.displayName || "User"}
-                          className="w-8 h-8 rounded-full"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">
-                          {getInitials(participant.displayName || "🥸")}
-                        </div>
-                      )}
+                      <ProfileCircle
+                        avatarUrl={participant.avatarUrl}
+                        displayName={participant.displayName}
+                        userId={participant.userId}
+                        size="md"
+                      />
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {participant.displayName || "Anonymous"}
@@ -273,17 +265,13 @@ export default function StandingsTab({
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      {participant.avatarUrl ? (
-                        <img
-                          src={participant.avatarUrl}
-                          alt={participant.displayName || "User"}
-                          className="w-10 h-10 rounded-full grayscale"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold">
-                          {getInitials(participant.displayName || "🥸")}
-                        </div>
-                      )}
+                      <ProfileCircle
+                        avatarUrl={participant.avatarUrl}
+                        displayName={participant.displayName}
+                        userId={participant.userId}
+                        size="lg"
+                        grayscale={true}
+                      />
                       <div>
                         <p className="font-semibold text-gray-700 dark:text-gray-300">
                           {participant.displayName || "Anonymous"}

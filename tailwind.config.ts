@@ -6,6 +6,15 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    // Profile gradient classes from profile-colors.ts
+    { pattern: /^from-(blue|purple|green|orange|cyan|violet|rose|teal|amber|indigo)-(500)$/ },
+    { pattern: /^to-(indigo|pink|emerald|red|blue|purple|pink|cyan|orange|blue)-(500)$/ },
+    {
+      pattern:
+        /^(from|to)-(blue|purple|green|orange|cyan|violet|rose|teal|amber|indigo)-(300|400|500|600)$/,
+    },
+  ],
   darkMode: "class",
   theme: {
     extend: {

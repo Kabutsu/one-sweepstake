@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to OneSweepstake</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    img {
+      border: 0;
+      display: block;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .wrapper {
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      margin: 40px 0;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: 700;
+      color: #107c11;
+      text-decoration: none;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666666;
+      margin: 0;
+    }
+    .content {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .content h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0a0a0a;
+      margin: 0 0 16px 0;
+    }
+    .content p {
+      font-size: 14px;
+      color: #666666;
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #107c11;
+      color: #ffffff;
+      padding: 14px 32px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      margin: 24px 0;
+      transition: background-color 0.2s;
+    }
+    .cta-button:hover {
+      background-color: #0e6b0e;
+    }
+    .footer {
+      border-top: 1px solid #e5e5e5;
+      padding-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #999999;
+    }
+    .footer p {
+      margin: 8px 0;
+    }
+    .link-fallback {
+      word-break: break-all;
+      font-size: 12px;
+      color: #107c11;
+      margin-top: 16px;
+    }
+    @media only screen and (max-width: 600px) {
+      .wrapper {
+        padding: 24px;
+      }
+      .content h2 {
+        font-size: 18px;
+      }
+      .cta-button {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="wrapper">
+      <div class="header">
+        <div class="brand">OneSweepstake</div>
+        <p class="subtitle">Your magic link is ready</p>
+      </div>
+
+      <div class="content">
+        <h2>Sign in to your account</h2>
+        <p>Click the button below to sign in. This link will expire in 30 minutes.</p>
+
+        <a href="{{ .ConfirmationURL }}" class="cta-button">Sign in</a>
+
+        <p style="font-size: 12px; color: #999999; margin-top: 24px;">Or copy and paste this link in your browser:</p>
+        <div class="link-fallback">{{ .ConfirmationURL }}</div>
+      </div>
+
+      <div class="footer">
+        <p>Didn't request this? You can safely ignore this email.</p>
+        <p>OneSweepstake — Run football sweepstakes with your friends</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
