@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getInitials } from "@/utils/user-utils";
+import ProfileCircle from "@/components/ui/ProfileCircle";
 
 export interface Message {
   id: string;
@@ -148,15 +148,13 @@ export default function MessageList({
             >
               {!isOwnMessage ? (
                 showAvatar ? (
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold mb-1 ${
-                      isOwnMessage
-                        ? "bg-gradient-to-br from-primary to-primary-600"
-                        : "bg-gradient-to-br from-gray-400 to-gray-600"
-                    }`}
-                  >
-                    {getInitials(msg.displayName)}
-                  </div>
+                  <ProfileCircle
+                    avatarUrl={msg.avatarUrl}
+                    displayName={msg.displayName}
+                    userId={msg.userId}
+                    size="md"
+                    className="mb-1"
+                  />
                 ) : (
                   <div className="w-8" />
                 )
