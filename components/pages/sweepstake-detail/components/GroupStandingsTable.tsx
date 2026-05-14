@@ -37,7 +37,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
 
   if (groups.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-pretty">
         <p>Group standings will appear once matches begin</p>
       </div>
     );

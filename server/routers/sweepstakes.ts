@@ -75,6 +75,9 @@ export const sweepstakesRouter = router({
           name: sweepstakes.name,
           tournamentId: sweepstakes.tournamentId,
           tournamentName: tournaments.name,
+          tournamentStartDate: tournaments.startDate,
+          tournamentEndDate: tournaments.endDate,
+          tournamentIsActive: tournaments.isActive,
           creatorId: sweepstakes.creatorId,
           joinCode: sweepstakes.joinCode,
           isPrivate: sweepstakes.isPrivate,
@@ -114,8 +117,14 @@ export const sweepstakesRouter = router({
         .innerJoin(users, eq(participants.userId, users.id))
         .where(eq(participants.sweepstakeId, input.id));
 
+      // Compute tournament active state based on dates and isActive flag
+      const now = new Date();
+      const tournamentHasStarted = sweepstake.tournamentStartDate <= now;
+      const tournamentActive = sweepstake.tournamentIsActive && tournamentHasStarted;
+
       return {
         ...sweepstake,
+        tournamentActive,
         participants: allParticipants,
         isCreator: sweepstake.creatorId === ctx.user.id,
       };

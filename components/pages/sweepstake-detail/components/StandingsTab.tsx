@@ -1,0 +1,279 @@
+import { trpc } from "@/lib/trpc";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import EmptyState from "@/components/ui/EmptyState";
+import EliminationBadge from "@/components/ui/EliminationBadge";
+import GroupStandingsTable from "./GroupStandingsTable";
+import DrawTeamsButton from "./teams-tab/components/DrawTeamsButton";
+import { getInitials } from "@/utils/user-utils";
+
+interface StandingsTabProps {
+  sweepstakeId: string;
+  tournamentId: string;
+  tournamentActive: boolean;
+  drawCompletedAt: Date | null;
+  isCreator: boolean;
+}
+
+export default function StandingsTab({
+  sweepstakeId,
+  tournamentId,
+  tournamentActive,
+  drawCompletedAt,
+  isCreator,
+}: StandingsTabProps) {
+  const { data: leaderboard, isLoading: leaderboardLoading } =
+    trpc.sweepstakes.getLeaderboard.useQuery({ sweepstakeId });
+
+  const { data: groupStandings, isLoading: standingsLoading } =
+    trpc.sweepstakes.getGroupStandings.useQuery({ tournamentId });
+
+  if (leaderboardLoading || standingsLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // Pre-draw state - show empty state with draw button
+  if (!drawCompletedAt) {
+    return (
+      <div className="space-y-6">
+        <EmptyState
+          icon={
+            <svg
+              className="w-12 h-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          }
+          title="No Teams Assigned Yet"
+          description="Teams will be randomly assigned to participants after the draw is completed."
+        />
+
+        {isCreator && (
+          <div className="flex justify-center">
+            <DrawTeamsButton sweepstakeId={sweepstakeId} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!leaderboard) {
+    return (
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <p>No standings data available</p>
+      </div>
+    );
+  }
+
+  const { stillIn, eliminated, winner, runnerUp } = leaderboard;
+
+  return (
+    <div className="space-y-8">
+      {/* Winner Announcement - only show if tournament active */}
+      {tournamentActive && winner && (
+        <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 dark:from-yellow-600 dark:via-yellow-700 dark:to-yellow-800 p-6 rounded-2xl text-center shadow-xl">
+          <div className="text-4xl mb-2">🏆</div>
+          <h2 className="text-2xl font-bold text-white mb-1">Winner!</h2>
+          <p className="text-white/90 text-lg font-semibold">{winner.displayName || "Anonymous"}</p>
+          <p className="text-white/75 text-sm mt-2">
+            {winner.teamsRemaining} team{winner.teamsRemaining !== 1 ? "s" : ""} remaining
+          </p>
+        </div>
+      )}
+
+      {/* Runner-Up - only show if tournament active */}
+      {tournamentActive && runnerUp && (
+        <div className="bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl text-center">
+          <div className="text-2xl mb-1">🥈</div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Runner-Up</h3>
+          <p className="text-gray-700 dark:text-gray-300 font-semibold">
+            {runnerUp.displayName || "Anonymous"}
+          </p>
+        </div>
+      )}
+
+      {/* Team Assignments / Leaderboard */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          {tournamentActive ? "Standings" : "Team Assignments"}
+        </h2>
+
+        {/* Still In Section - show differently based on tournament state */}
+        {stillIn.length > 0 && (
+          <div className="mb-6">
+            {tournamentActive && (
+              <h3 className="text-sm font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-3">
+                Still In ({stillIn.length})
+              </h3>
+            )}
+            <div className="space-y-3">
+              {stillIn.map((participant) => (
+                <div
+                  key={participant.participantId}
+                  className={`bg-white dark:bg-black/30 rounded-xl p-4 ${
+                    tournamentActive
+                      ? "border-2 border-green-200 dark:border-green-800"
+                      : "border border-gray-200 dark:border-gray-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {tournamentActive && (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+                          #{participant.rank}
+                        </div>
+                      )}
+                      {participant.avatarUrl ? (
+                        <img
+                          src={participant.avatarUrl}
+                          alt={participant.displayName || "User"}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                          {getInitials(participant.displayName || "🥸")}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {participant.displayName || "Anonymous"}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {participant.teamsRemaining} team
+                          {participant.teamsRemaining !== 1 ? "s" : ""}
+                          {tournamentActive && " remaining"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Teams */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {participant.teams.map((team) => (
+                      <div
+                        key={team.teamId}
+                        className={`
+                          flex items-center gap-2 p-2 rounded-lg
+                          ${
+                            team.isEliminated
+                              ? "bg-gray-100 dark:bg-gray-800/50 opacity-50"
+                              : tournamentActive
+                                ? "bg-green-50 dark:bg-green-900/20"
+                                : "bg-blue-50 dark:bg-blue-900/20"
+                          }
+                        `}
+                      >
+                        {team.teamLogo && (
+                          <img
+                            src={team.teamLogo}
+                            alt={team.teamName}
+                            className={`w-6 h-6 object-contain ${team.isEliminated ? "grayscale" : ""}`}
+                          />
+                        )}
+                        <span
+                          className={`text-xs font-medium ${
+                            team.isEliminated
+                              ? "line-through text-gray-500"
+                              : "text-gray-900 dark:text-white"
+                          }`}
+                        >
+                          {team.teamName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Eliminated Section - only show if tournament active */}
+        {tournamentActive && eliminated.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide mb-3">
+              Eliminated ({eliminated.length})
+            </h3>
+            <div className="space-y-3 opacity-60">
+              {eliminated.map((participant) => (
+                <div
+                  key={participant.participantId}
+                  className="bg-white dark:bg-black/30 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {participant.avatarUrl ? (
+                        <img
+                          src={participant.avatarUrl}
+                          alt={participant.displayName || "User"}
+                          className="w-10 h-10 rounded-full grayscale"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold">
+                          {getInitials(participant.displayName || "🥸")}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-700 dark:text-gray-300">
+                          {participant.displayName || "Anonymous"}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          All teams eliminated
+                        </p>
+                      </div>
+                    </div>
+                    <EliminationBadge isEliminated={true} size="sm" />
+                  </div>
+
+                  {/* Teams */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {participant.teams.map((team) => (
+                      <div
+                        key={team.teamId}
+                        className="flex items-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-800/50"
+                      >
+                        {team.teamLogo && (
+                          <img
+                            src={team.teamLogo}
+                            alt={team.teamName}
+                            className="w-6 h-6 object-contain grayscale"
+                          />
+                        )}
+                        <span className="text-xs font-medium line-through text-gray-500">
+                          {team.teamName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Group Standings */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Group Standings</h2>
+        {groupStandings ? (
+          <GroupStandingsTable standings={groupStandings} />
+        ) : (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>Group standings not available</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
