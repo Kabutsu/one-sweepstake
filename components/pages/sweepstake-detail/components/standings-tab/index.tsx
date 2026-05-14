@@ -32,8 +32,28 @@ export default function StandingsTab({
       { sweepstakeId },
       {
         select: (data) => {
-          // If tournament is active, return in rank order
-          if (tournamentActive) return data;
+          // If tournament is active, return participants in rank order but sort teams by performance (remaining teams first)
+          if (tournamentActive) {
+            const ranked = [...data.stillIn];
+
+            ranked.forEach((participant) => {
+              participant.teams.sort((a, b) => {
+                // Sort by:
+                // 1. Eliminated last
+                if (a.isEliminated !== b.isEliminated) {
+                  return a.isEliminated ? 1 : -1;
+                }
+
+                // 2. Return original order (which is based on draw order) to avoid unnecessary reordering
+                return 0;
+              });
+            });
+
+            return {
+              ...data,
+              stillIn: ranked,
+            };
+          }
 
           // Otherwise, rank assignements with current user first, then by number of teams, then alphabetically
           const ranked = [...data.stillIn];
@@ -165,16 +185,12 @@ export default function StandingsTab({
               {stillIn.map((participant) => (
                 <div
                   key={participant.participantId}
-                  className={`bg-white dark:bg-black/30 rounded-xl p-4 ${
-                    tournamentActive
-                      ? "border-2 border-green-200 dark:border-green-800"
-                      : "border border-gray-200 dark:border-gray-700"
-                  }`}
+                  className="bg-white dark:bg-black/30 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {tournamentActive && (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-300 to-primary-500 flex items-center justify-center text-white font-bold text-lg">
                           #{participant.rank}
                         </div>
                       )}
@@ -213,7 +229,7 @@ export default function StandingsTab({
                             team.isEliminated
                               ? "bg-gray-100 dark:bg-gray-800/50 opacity-50"
                               : tournamentActive
-                                ? "bg-green-50 dark:bg-green-900/20"
+                                ? "bg-primary-50 dark:bg-primary-900/20"
                                 : "bg-blue-50 dark:bg-blue-900/20"
                           }
                         `}

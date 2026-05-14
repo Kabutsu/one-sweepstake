@@ -167,10 +167,11 @@ export default function MessageList({
                   <div className="flex items-center my-4 w-full">
                     <hr className="flex-grow border-gray-300 dark:border-gray-700" />
                     <span className="mx-4 text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(msg.createdAt).toLocaleDateString("en-GB", {
+                      {new Date(msg.createdAt).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
+                        hour12: false,
                       })}
                     </span>
                     <hr className="flex-grow border-gray-300 dark:border-gray-700" />

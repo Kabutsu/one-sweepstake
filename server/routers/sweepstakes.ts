@@ -528,6 +528,7 @@ export const sweepstakesRouter = router({
       .select({
         sweepstakeId: sweepstakes.id,
         tournamentId: sweepstakes.tournamentId,
+        drawCompletedAt: sweepstakes.drawCompletedAt,
         tournamentEndDate: tournaments.endDate,
         participantId: participants.id,
       })
@@ -539,11 +540,13 @@ export const sweepstakesRouter = router({
     // Filter to active sweepstakes (drawn and tournament hasn't ended)
     const now = new Date();
     const activeSweepstakes = userSweepstakes.filter(
-      (s) => s.tournamentEndDate && new Date(s.tournamentEndDate) > now
+      (s) =>
+        s.tournamentEndDate && new Date(s.tournamentEndDate) > now && s.drawCompletedAt !== null
     );
 
     if (activeSweepstakes.length === 0) {
       return {
+        teamsRemaining: [],
         totalTeamsRemaining: 0,
         topTeams: [],
         activeSweepstakes: 0,
@@ -586,12 +589,13 @@ export const sweepstakesRouter = router({
     // Remove duplicates
     const uniqueTeams = Array.from(new Map(allUserTeams.map((t) => [t.teamId, t])).values());
 
-    const teamsRemaining = uniqueTeams.filter((t) => !t.isEliminated).length;
+    const teamsRemaining = uniqueTeams.filter((t) => !t.isEliminated);
     const teamStandings = getTeamStandings(allMatches, uniqueTeams);
     const topTeams = getTopRankedTeams(teamStandings, 3);
 
     return {
-      totalTeamsRemaining: teamsRemaining,
+      teamsRemaining,
+      totalTeamsRemaining: teamsRemaining.length,
       topTeams,
       activeSweepstakes: activeSweepstakes.length,
     };

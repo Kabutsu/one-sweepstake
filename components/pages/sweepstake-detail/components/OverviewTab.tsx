@@ -55,12 +55,13 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
               </p>
               <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                 Completed on{" "}
-                {new Date(sweepstake.drawCompletedAt).toLocaleDateString("en-US", {
+                {new Date(sweepstake.drawCompletedAt).toLocaleDateString(undefined, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
                   hour: "numeric",
                   minute: "2-digit",
+                  hour12: false,
                 })}
               </p>
             </div>
@@ -149,9 +150,10 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
 
           <StatCard label="Created">
             <p className="text-sm font-bold text-gray-900 dark:text-white">
-              {new Date(sweepstake.createdAt).toLocaleDateString("en-US", {
+              {new Date(sweepstake.createdAt).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
+                hour12: false,
               })}
             </p>
           </StatCard>

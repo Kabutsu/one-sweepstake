@@ -19,9 +19,7 @@ interface GroupStandingsTableProps {
 }
 
 export default function GroupStandingsTable({ standings }: GroupStandingsTableProps) {
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(Object.keys(standings).slice(0, 2)) // Expand first 2 groups by default
-  );
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([]));
 
   const toggleGroup = (group: string) => {
     const newExpanded = new Set(expandedGroups);
@@ -44,7 +42,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-3 grid-cols-1">
       {groups.map((group) => {
         const isExpanded = expandedGroups.has(group);
         const groupStandings = standings[group];
@@ -64,9 +62,6 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                   {group}
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-white">Group {group}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {groupStandings.length} teams
-                </span>
               </div>
               <svg
                 className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
@@ -110,7 +105,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                           <tr
                             key={team.teamId}
                             className={`
-                              ${isQualified ? "bg-green-50 dark:bg-green-900/10" : ""}
+                              ${isQualified ? "bg-primary-50 dark:bg-primary-900/10" : ""}
                               ${isThirdPlace ? "bg-yellow-50 dark:bg-yellow-900/10" : ""}
                               hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors
                             `}
@@ -119,7 +114,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                               <div
                                 className={`
                                   w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                                  ${isQualified ? "bg-green-500 text-white" : ""}
+                                  ${isQualified ? "bg-primary-600 text-white" : ""}
                                   ${isThirdPlace ? "bg-yellow-500 text-white" : ""}
                                   ${!isQualified && !isThirdPlace ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400" : ""}
                                 `}
@@ -166,7 +161,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                 {/* Legend */}
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/30 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                    <div className="w-4 h-4 rounded-full bg-primary-600"></div>
                     <span className="text-gray-600 dark:text-gray-400">Qualified</span>
                   </div>
                   <div className="flex items-center gap-2">

@@ -50,7 +50,7 @@ export interface ThirdPlaceRanking {
  */
 function getGroupFromMatch(match: Match): string | null {
   if (match.rawData?.group) {
-    return match.rawData.group;
+    return match.rawData.group.split("_")[1] || match.rawData.group;
   }
 
   // Fallback: try to extract from stage
