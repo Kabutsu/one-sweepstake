@@ -141,9 +141,15 @@ export const authRouter = router({
       .createSignedUploadUrl(filePath);
 
     if (error) {
+      // Provide helpful error messages
+      const errorMessage =
+        error.message?.includes("does not exist") || error.message?.includes("not found")
+          ? "Profile images bucket not configured. Please create a 'profile-images' bucket in Supabase Storage."
+          : `Failed to generate upload URL: ${error.message}`;
+
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: `Failed to generate upload URL: ${error.message}`,
+        message: errorMessage,
       });
     }
 
