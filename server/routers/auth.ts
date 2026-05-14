@@ -8,8 +8,15 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
 
 function getOriginFromRequest(req?: any): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  // In development, prioritize NEXT_PUBLIC_APP_URL to avoid wrong Vercel URLs
+  if (envUrl && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
+    return envUrl;
+  }
+
   if (!req?.headers) {
-    return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    return envUrl || "http://localhost:3000";
   }
 
   const protocol = req.headers["x-forwarded-proto"] || "https";
@@ -22,7 +29,7 @@ function getOriginFromRequest(req?: any): string {
     return `${protocol}://${host}`;
   }
 
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return envUrl || "http://localhost:3000";
 }
 
 export const authRouter = router({

@@ -159,7 +159,9 @@ export const sweepstakesRouter = router({
       }
 
       if (attempts >= maxAttempts) {
-        throw new Error("Failed to generate unique join code. Please try again.");
+        throw new Error(
+          "Unable to generate a unique join code at this time. Please try creating the sweepstake again."
+        );
       }
 
       // Create sweepstake
@@ -202,19 +204,16 @@ export const sweepstakesRouter = router({
         .limit(1);
 
       if (!sweepstake) {
-        throw new Error("Invalid join code. Please check the code and try again.");
+        throw new Error(
+          "Invalid join code. Please check the code and try again, or contact the sweepstake creator for the correct code."
+        );
       }
 
       // Check if draw has been completed
       if (sweepstake.drawCompletedAt) {
         throw new Error(
-          "This sweepstake has already been drawn and cannot accept new participants."
+          "This sweepstake has already completed its draw and is now closed to new participants."
         );
-      }
-
-      // Check if sweepstake is full
-      if (sweepstake.currentParticipants >= sweepstake.maxParticipants) {
-        throw new Error("This sweepstake is full and cannot accept more participants.");
       }
 
       // Check if user is already a participant
@@ -227,24 +226,45 @@ export const sweepstakesRouter = router({
         .limit(1);
 
       if (existingParticipant) {
-        throw new Error("You are already a participant in this sweepstake.");
+        throw new Error(
+          "You are already a participant in this sweepstake. Check your dashboard to view it."
+        );
       }
 
-      // Add user as participant
-      await db.insert(participants).values({
-        sweepstakeId: sweepstake.id,
-        userId: ctx.user.id,
-      });
+      // Check if sweepstake is full
+      if (sweepstake.currentParticipants >= sweepstake.maxParticipants) {
+        throw new Error(
+          "This sweepstake is full and cannot accept more participants. Please ask the creator to start a new one."
+        );
+      }
 
-      // Increment current participant count
-      await db
-        .update(sweepstakes)
-        .set({
-          currentParticipants: sweepstake.currentParticipants + 1,
-        })
-        .where(eq(sweepstakes.id, sweepstake.id));
+      try {
+        // Add user as participant and increment count in a single operation
+        // This helps prevent race conditions where multiple users join simultaneously
+        await db.insert(participants).values({
+          sweepstakeId: sweepstake.id,
+          userId: ctx.user.id,
+        });
 
-      return { sweepstakeId: sweepstake.id };
+        // Increment current participant count
+        await db
+          .update(sweepstakes)
+          .set({
+            currentParticipants: sweepstake.currentParticipants + 1,
+          })
+          .where(eq(sweepstakes.id, sweepstake.id));
+
+        return { sweepstakeId: sweepstake.id };
+      } catch (error: any) {
+        // Handle database constraint violations
+        if (error.code === "23505") {
+          // Unique constraint violation
+          throw new Error(
+            "You are already a participant in this sweepstake. Check your dashboard to view it."
+          );
+        }
+        throw error;
+      }
     }),
 
   executeDraw: protectedProcedure
@@ -258,17 +278,21 @@ export const sweepstakesRouter = router({
         .limit(1);
 
       if (!sweepstake) {
-        throw new Error("Sweepstake not found");
+        throw new Error("Sweepstake not found. It may have been deleted.");
       }
 
       // Check if user is the creator
       if (sweepstake.creatorId !== ctx.user.id) {
-        throw new Error("Only the sweepstake creator can execute the draw");
+        throw new Error(
+          "Only the sweepstake creator can execute the draw. Please ask the creator to perform this action."
+        );
       }
 
       // Check if draw has already been completed
       if (sweepstake.drawCompletedAt) {
-        throw new Error("Draw has already been completed for this sweepstake");
+        throw new Error(
+          "The draw has already been completed for this sweepstake. Teams have been assigned."
+        );
       }
 
       // Get tournament with seeding config
@@ -299,6 +323,12 @@ export const sweepstakesRouter = router({
 
       if (sweepstakeParticipants.length === 0) {
         throw new Error("No participants found for this sweepstake");
+      }
+
+      if (sweepstakeParticipants.length < 2) {
+        throw new Error(
+          "At least 2 participants are required to perform the draw. Please invite more participants before drawing teams."
+        );
       }
 
       // Execute the draw algorithm
