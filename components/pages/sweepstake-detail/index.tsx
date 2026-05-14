@@ -5,7 +5,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import OverviewTab from "./components/OverviewTab";
 import ParticipantsTab from "./components/ParticipantsTab";
 import ChatTab from "./components/chat-tab";
-import StandingsTab from "./components/StandingsTab";
+import StandingsTab from "./components/standings-tab";
 
 type TabType = "overview" | "standings" | "participants" | "chat";
 
@@ -93,7 +93,7 @@ export default function SweepstakeDetail() {
               key={tab.id}
               id={`tab-${tab.id}`}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-semibold transition-all ${
+              className={`scroll-mt-20 flex-1 min-w-[120px] px-4 py-3 rounded-xl font-semibold transition-all ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-lg"
                   : "text-gray-600 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"

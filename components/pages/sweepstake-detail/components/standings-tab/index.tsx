@@ -7,8 +7,8 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import EliminationBadge from "@/components/ui/EliminationBadge";
 
-import DrawTeamsButton from "./teams-tab/components/DrawTeamsButton";
-import GroupStandingsTable from "./GroupStandingsTable";
+import DrawTeamsButton from "./components/DrawTeamsButton";
+import GroupStandingsTable from "./components/GroupStandingsTable";
 
 interface StandingsTabProps {
   sweepstakeId: string;
