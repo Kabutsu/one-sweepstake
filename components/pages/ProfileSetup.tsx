@@ -16,18 +16,6 @@ export default function ProfileSetup() {
   const getUploadUrl = trpc.auth.getUploadUrl.useMutation();
   const utils = trpc.useUtils();
 
-  // // Pre-populate display name with the default generated name
-  // useState(() => {
-  //   if (currentUser?.displayName) {
-  //     setDisplayName(currentUser.displayName);
-  //   }
-  // });
-
-  // // Update display name when user data loads
-  // if (currentUser?.displayName && displayName === "" && !isLoadingUser) {
-  //   setDisplayName(currentUser.displayName);
-  // }
-
   const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setDisplayName(value);
