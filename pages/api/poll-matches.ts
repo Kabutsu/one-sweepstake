@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const authHeader = req.headers.authorization;
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET || "default-secret"}`;
+  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
 
   if (authHeader !== expectedAuth) {
     return res.status(401).json({ error: "Unauthorized" });
