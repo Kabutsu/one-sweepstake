@@ -38,7 +38,11 @@ export default function Home() {
         <Route
           path="/auth/setup"
           element={
-            user && !user.displayName ? <ProfileSetup /> : <Navigate to="/dashboard" replace />
+            user && !user.profileCustomized ? (
+              <ProfileSetup />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
           }
         />
         <Route path="/*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />

@@ -106,6 +106,7 @@ export const authRouter = router({
           id: user.id,
           email: user.email,
           displayName: user.displayName,
+          profileCustomized: user.profileCustomized,
         },
       };
     }),
@@ -165,6 +166,7 @@ export const authRouter = router({
         .update(users)
         .set({
           displayName: input.displayName,
+          profileCustomized: true,
           ...(input.avatarUrl && { avatarUrl: input.avatarUrl }),
         })
         .where(eq(users.id, ctx.user.id))
