@@ -12,6 +12,24 @@ export default function AuthVerify() {
   useEffect(() => {
     // Supabase puts auth data in the URL hash
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    // Check for Supabase error first (happens when OTP expires on their end)
+    const error = hashParams.get("error");
+    const errorCode = hashParams.get("error_code");
+    const errorDescription = hashParams.get("error_description");
+
+    if (error || errorCode) {
+      // Handle specific Supabase errors
+      if (errorCode === "otp_expired") {
+        setError("Your sign-in link has expired. Please request a new one.");
+      } else if (errorDescription) {
+        setError(decodeURIComponent(errorDescription.replace(/\+/g, " ")));
+      } else {
+        setError("Authentication failed. Please try again.");
+      }
+      return;
+    }
+
     const token = hashParams.get("access_token");
     const type = hashParams.get("type");
 
@@ -66,6 +84,8 @@ export default function AuthVerify() {
   }, []);
 
   if (error) {
+    const isExpiredError = error.includes("expired") || error.includes("invalid");
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="card max-w-md w-full p-8 animate-fade-in">
@@ -86,9 +106,23 @@ export default function AuthVerify() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold mb-4">Verification failed</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            {isExpiredError && (
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-left">
+                <p className="font-semibold mb-2">Why did this happen?</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Sign-in links can only be used once</li>
+                  <li>Links expire after a period of time</li>
+                  <li>Opening the link multiple times will cause it to fail</li>
+                </ul>
+                <p className="mt-3">
+                  <strong>Tip:</strong> Make sure to click the link only once, and use it promptly
+                  after receiving the email.
+                </p>
+              </div>
+            )}
             <button onClick={() => navigate("/")} className="btn-primary">
-              Back to sign in
+              Request a new sign-in link
             </button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { createToken, getAuthCookieOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
+import { generateDisplayNameFromEmail } from "@/utils/user-utils";
 
 function getOriginFromRequest(req?: any): string {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -42,6 +43,12 @@ export const authRouter = router({
         email: input.email.toLowerCase(),
         options: {
           emailRedirectTo: `${baseUrl}/auth/verify`,
+          // Prevent creation of duplicate users (we handle this in verifyMagicLink)
+          shouldCreateUser: true,
+          data: {
+            // Include timestamp to help with debugging
+            requestedAt: new Date().toISOString(),
+          },
         },
       });
 
@@ -115,14 +122,15 @@ export const authRouter = router({
       const isNewUser = !user;
 
       if (!user) {
-        // Create new user in our database
+        // Create new user in our database with a generated display name
         const userId = crypto.randomUUID();
+        const defaultDisplayName = generateDisplayNameFromEmail(email);
         [user] = await db
           .insert(users)
           .values({
             id: userId,
             email,
-            displayName: null,
+            displayName: defaultDisplayName,
           })
           .returning();
       }
