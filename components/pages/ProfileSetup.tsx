@@ -6,7 +6,6 @@ import ProfileCircle from "@/components/ui/ProfileCircle";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
-  const { data: currentUser, isLoading: isLoadingUser } = trpc.auth.me.useQuery();
   const [displayName, setDisplayName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -15,13 +14,6 @@ export default function ProfileSetup() {
   const setupProfile = trpc.auth.setupProfile.useMutation();
   const getUploadUrl = trpc.auth.getUploadUrl.useMutation();
   const utils = trpc.useUtils();
-
-  // Pre-populate display name with the default generated name
-  useEffect(() => {
-    if (currentUser?.displayName && !displayName) {
-      setDisplayName(currentUser.displayName);
-    }
-  }, [currentUser?.displayName, displayName]);
 
   const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -143,18 +135,6 @@ export default function ProfileSetup() {
     (setupProfile.isError ? "Failed to save profile. Please try again." : null);
   const displayNameLength = displayName.length;
   const isButtonDisabled = setupProfile.isPending || getUploadUrl.isPending || !displayName.trim();
-
-  // Show loading spinner while fetching user data
-  if (isLoadingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background-light to-gray-100 dark:from-background-dark dark:to-gray-900">

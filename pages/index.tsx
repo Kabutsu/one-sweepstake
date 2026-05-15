@@ -21,6 +21,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    document.title = "OneSweepstake - World Cup 2026";
   }, []);
 
   if (!mounted || isLoading) {
@@ -34,7 +35,20 @@ export default function Home() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+        <Route
+          path="/"
+          element={
+            user ? (
+              user.profileCustomized ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/auth/setup" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route
           path="/auth/setup"
           element={

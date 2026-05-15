@@ -37,7 +37,7 @@ export default function LandingPage() {
       await utils.auth.me.refetch();
 
       // Navigate based on profile completeness
-      if (result.isNewUser || !result.user.displayName) {
+      if (result.isNewUser || !result.user.profileCustomized) {
         navigate("/auth/setup");
       } else {
         navigate("/dashboard");
