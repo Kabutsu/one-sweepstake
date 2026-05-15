@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -15,6 +15,13 @@ export default function ProfileSetup() {
   const setupProfile = trpc.auth.setupProfile.useMutation();
   const getUploadUrl = trpc.auth.getUploadUrl.useMutation();
   const utils = trpc.useUtils();
+
+  // Pre-populate display name with the default generated name
+  useEffect(() => {
+    if (currentUser?.displayName && !displayName) {
+      setDisplayName(currentUser.displayName);
+    }
+  }, [currentUser?.displayName, displayName]);
 
   const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -115,7 +122,7 @@ export default function ProfileSetup() {
           // Generate public URL
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
           avatarUrl = `${supabaseUrl}/storage/v1/object/public/profile-images/${filePath}`;
-        } catch (uploadErr) {
+        } catch {
           setUploadError("Failed to upload image. Please try again.");
           return;
         }

@@ -127,7 +127,7 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
             <p className="text-xs text-center text-gray-500">
-              We'll send you a 6-digit code to verify your email. No password required.
+              We&apos;ll send you a 6-digit code to verify your email. No password required.
             </p>
           </div>
         </div>
@@ -172,9 +172,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
-                We sent a 6-digit code to
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">We sent a 6-digit code to</p>
               <p className="font-semibold text-gray-900 dark:text-gray-100">{email}</p>
             </div>
 
@@ -248,7 +246,7 @@ export default function LandingPage() {
 
             <div className="mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
               <p className="text-xs text-center text-gray-500">
-                The code expires in 1 hour. Check your spam folder if you don't see it.
+                The code expires in 1 hour. Check your spam folder if you don&apos;t see it.
               </p>
             </div>
           </>

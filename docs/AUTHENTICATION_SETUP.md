@@ -16,11 +16,13 @@ This app uses Supabase for passwordless authentication with 6-digit email OTP (O
 ## Why OTP Codes Instead of Magic Links?
 
 **Magic links had issues:**
+
 - Corporate email security scanners would consume the link before users could click it
 - Links could only be used once, causing confusion if clicked multiple times
 - Browser-level session conflicts when switching users
 
 **OTP codes solve these problems:**
+
 - ✅ Security scanners can't "consume" a code by scanning the email
 - ✅ Works reliably with all email clients and corporate security tools
 - ✅ Familiar UX (like 2FA codes from Google, GitHub, etc.)
@@ -49,6 +51,7 @@ This app uses Supabase for passwordless authentication with 6-digit email OTP (O
 ### Environment Variables
 
 Required environment variables:
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
@@ -61,16 +64,19 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ### Issue 1: "Invalid or expired code"
 
 **Symptoms:**
+
 - User enters the code but gets an error message
 - Code was entered correctly but verification fails
 
 **Root Causes:**
+
 1. **Code has expired** - Codes expire after 1 hour
 2. **Code already used** - OTP codes are single-use
 3. **Typo in code** - User mistyped the 6-digit code
 4. **Rate limiting** - Too many failed attempts
 
 **Solutions:**
+
 1. Click "Resend code" to get a fresh code
 2. Make sure to enter all 6 digits
 3. Check email for the most recent code (older codes may be invalid)
@@ -79,10 +85,12 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ### Issue 2: Not receiving the email
 
 **Symptoms:**
+
 - Code email doesn't arrive
 - Significant delay in receiving the email
 
 **Solutions:**
+
 1. **Check spam folder** - OTP emails sometimes get flagged
 2. **Verify email address** - Make sure the email is spelled correctly
 3. **Wait a minute** - Email delivery can sometimes be delayed
@@ -92,10 +100,12 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ### Issue 3: Display name defaults to generated value
 
 **Symptoms:**
+
 - New user's display name is auto-generated from their email
 - User wants to change it
 
 **Solution:**
+
 - ✅ **Expected behavior** - New users get a default display name (e.g., "sam.james.law97@gmail.com" → "Sam James Law")
 - Profile Setup screen pre-populates this name for easy editing
 - Users can change it during profile setup or later in settings
@@ -117,22 +127,25 @@ If invalid: Redirect to /auth/verify#error=access_denied&error_code=otp_expired
 FronAuthentication Flow
 
 ```
+
 User → Email Input (LandingPage)
-  ↓
+↓
 Backend (sendOtpCode) → Supabase generates 6-digit code
-  ↓
+↓
 Supabase sends email with code
-  ↓
+↓
 User receives email, enters code on same page
-  ↓
+↓
 Backend (verifyOtpCode):
-  1. Verifies code with Supabase
-  2. Creates or retrieves user from database
-  3. Generates default display name if new user
-  4. Sets auth cookie
-  5. Returns user info
-  ↓
-Frontend navigates to Profile Setup (new users) or Dashboard (existing users)
+
+1. Verifies code with Supabase
+2. Creates or retrieves user from database
+3. Generates default display name if new user
+4. Sets auth cookie
+5. Returns user info
+   ↓
+   Frontend navigates to Profile Setup (new users) or Dashboard (existing users)
+
 ```
 
 ### Code Verification (Stateless Approach)
@@ -186,6 +199,7 @@ console.log('User created/retrieved:', user.id);
 ### Check Supabase Logs
 
 In Supabase Dashboard:
+
 - Go to Logs → Auth Logs
 - Look for failed OTP verifications
 - Check for rate limit hits
@@ -214,6 +228,7 @@ The `template.html` file should be uploaded to Supabase:
 ## Future Improvements
 
 Potential enhancements:
+
 1. Add rate limiting on frontend to provide better UX
 2. Implement OAuth providers (Google, GitHub) as alternatives
 3. Add 2FA for enhanced security (additional code after initial login)
@@ -236,6 +251,7 @@ Potential enhancements:
 ## Future Improvements
 
 Potential enhancements:
+
 1. Add option for password-based authentication as fallback
 2. Implement OAuth providers (Google, GitHub)
 3. Add 2FA for enhanced security

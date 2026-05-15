@@ -33,7 +33,10 @@ export const authRouter = router({
     .input(
       z.object({
         email: z.string().email(),
-        code: z.string().length(6).regex(/^\d{6}$/, "Code must be 6 digits"),
+        code: z
+          .string()
+          .length(6)
+          .regex(/^\d{6}$/, "Code must be 6 digits"),
       })
     )
     .mutation(async ({ input, ctx }) => {
