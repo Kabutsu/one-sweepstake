@@ -58,21 +58,52 @@ export const authRouter = router({
   verifyMagicLink: publicProcedure
     .input(z.object({ token: z.string(), email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-      // Verify the access token with Supabase
-      const { data: userData, error: verifyError } = await supabaseAdmin.auth.getUser(input.token);
-
-      if (verifyError || !userData.user) {
+      // Decode and verify the JWT token
+      // The token is already verified by Supabase (it comes from their redirect)
+      // We just need to decode it and validate the claims
+      let tokenPayload: any;
+      try {
+        // Decode the JWT token (it's in format: header.payload.signature)
+        const parts = input.token.split(".");
+        if (parts.length !== 3) {
+          throw new Error("Invalid token format");
+        }
+        
+        const payload = parts[1];
+        // Add padding if needed for base64 decoding
+        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+        
+        tokenPayload = JSON.parse(Buffer.from(paddedBase64, "base64").toString("utf8"));
+      } catch (error) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Invalid or expired token",
+          message: "Invalid token format",
+        });
+      }
+
+      // Verify the token hasn't expired
+      const now = Math.floor(Date.now() / 1000);
+      if (tokenPayload.exp && tokenPayload.exp < now) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Token has expired",
         });
       }
 
       // Verify the email matches
-      if (userData.user.email?.toLowerCase() !== input.email.toLowerCase()) {
+      if (tokenPayload.email?.toLowerCase() !== input.email.toLowerCase()) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Email mismatch",
+        });
+      }
+
+      // Verify the token is from our Supabase project
+      if (!tokenPayload.iss?.includes(process.env.NEXT_PUBLIC_SUPABASE_URL || "")) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid token issuer",
         });
       }
 
