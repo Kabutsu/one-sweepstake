@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
 import LandingPage from "@/components/pages/LandingPage";
-import AuthVerify from "@/components/pages/AuthVerify";
 import ProfileSetup from "@/components/pages/ProfileSetup";
 import Dashboard from "@/components/pages/dashboard";
 import CreateSweepstake from "@/components/pages/create-sweepstake";
@@ -36,7 +35,6 @@ export default function Home() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
-        <Route path="/auth/verify" element={<AuthVerify />} />
         <Route
           path="/auth/setup"
           element={

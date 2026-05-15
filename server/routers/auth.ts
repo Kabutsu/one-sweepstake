@@ -8,113 +8,50 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { TRPCError } from "@trpc/server";
 import { generateDisplayNameFromEmail } from "@/utils/user-utils";
 
-function getOriginFromRequest(req?: any): string {
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  // In development, prioritize NEXT_PUBLIC_APP_URL to avoid wrong Vercel URLs
-  if (envUrl && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
-    return envUrl;
-  }
-
-  if (!req?.headers) {
-    return envUrl || "http://localhost:3000";
-  }
-
-  const protocol = req.headers["x-forwarded-proto"] || "https";
-  let host = req.headers.host;
-
-  if (host) {
-    // Remove port from host if present (only keep domain)
-    // This handles cases like "one-sweepstake-2.vercel.app:443" -> "one-sweepstake-2.vercel.app"
-    host = host.split(":")[0];
-    return `${protocol}://${host}`;
-  }
-
-  return envUrl || "http://localhost:3000";
-}
-
 export const authRouter = router({
-  sendMagicLink: publicProcedure
+  sendOtpCode: publicProcedure
     .input(z.object({ email: z.string().email() }))
-    .mutation(async ({ input, ctx }) => {
-      const baseUrl = getOriginFromRequest(ctx.req);
-
+    .mutation(async ({ input }) => {
       const { error } = await supabaseAdmin.auth.signInWithOtp({
         email: input.email.toLowerCase(),
         options: {
-          emailRedirectTo: `${baseUrl}/auth/verify`,
-          // Prevent creation of duplicate users (we handle this in verifyMagicLink)
           shouldCreateUser: true,
-          data: {
-            // Include timestamp to help with debugging
-            requestedAt: new Date().toISOString(),
-          },
         },
       });
 
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to send magic link: ${error.message}`,
+          message: `Failed to send verification code: ${error.message}`,
         });
       }
 
       return { success: true };
     }),
 
-  verifyMagicLink: publicProcedure
-    .input(z.object({ token: z.string(), email: z.string().email() }))
+  verifyOtpCode: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        code: z.string().length(6).regex(/^\d{6}$/, "Code must be 6 digits"),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      // Decode and verify the JWT token
-      // The token is already verified by Supabase (it comes from their redirect)
-      // We just need to decode it and validate the claims
-      let tokenPayload: any;
-      try {
-        // Decode the JWT token (it's in format: header.payload.signature)
-        const parts = input.token.split(".");
-        if (parts.length !== 3) {
-          throw new Error("Invalid token format");
-        }
-        
-        const payload = parts[1];
-        // Add padding if needed for base64 decoding
-        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-        const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
-        
-        tokenPayload = JSON.parse(Buffer.from(paddedBase64, "base64").toString("utf8"));
-      } catch (error) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid token format",
-        });
-      }
-
-      // Verify the token hasn't expired
-      const now = Math.floor(Date.now() / 1000);
-      if (tokenPayload.exp && tokenPayload.exp < now) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Token has expired",
-        });
-      }
-
-      // Verify the email matches
-      if (tokenPayload.email?.toLowerCase() !== input.email.toLowerCase()) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Email mismatch",
-        });
-      }
-
-      // Verify the token is from our Supabase project
-      if (!tokenPayload.iss?.includes(process.env.NEXT_PUBLIC_SUPABASE_URL || "")) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid token issuer",
-        });
-      }
-
       const email = input.email.toLowerCase();
+
+      // Verify the OTP code with Supabase
+      const { data, error: verifyError } = await supabaseAdmin.auth.verifyOtp({
+        email,
+        token: input.code,
+        type: "email",
+      });
+
+      if (verifyError || !data.user) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired code",
+        });
+      }
 
       // Check if user exists in our database
       let [user] = await db.select().from(users).where(eq(users.email, email));
