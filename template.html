@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign in to OneSweepstake</title>
+  <title>Your OneSweepstake verification code</title>
   <style type="text/css">
     body {
       margin: 0;
@@ -13,10 +13,6 @@
     }
     table {
       border-collapse: collapse;
-    }
-    img {
-      border: 0;
-      display: block;
     }
     .container {
       width: 100%;
@@ -63,20 +59,28 @@
       margin: 0 0 12px 0;
       line-height: 1.6;
     }
-    .cta-button {
-      display: inline-block;
-      background-color: #107c11;
-      color: #ffffff;
-      padding: 14px 32px;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: 600;
-      font-size: 14px;
+    .code-box {
+      background-color: #f9f9f9;
+      border: 2px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 24px;
       margin: 24px 0;
-      transition: background-color 0.2s;
+      text-align: center;
     }
-    .cta-button:hover {
-      background-color: #0e6b0e;
+    .code {
+      font-size: 36px;
+      font-weight: 700;
+      color: #107c11;
+      letter-spacing: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+    }
+    .code-label {
+      font-size: 12px;
+      color: #999999;
+      margin-top: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .footer {
       border-top: 1px solid #e5e5e5;
@@ -88,11 +92,13 @@
     .footer p {
       margin: 8px 0;
     }
-    .link-fallback {
-      word-break: break-all;
-      font-size: 12px;
-      color: #107c11;
-      margin-top: 16px;
+    .warning {
+      background-color: #fff8e1;
+      border-left: 4px solid #ffc107;
+      padding: 12px 16px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #666666;
     }
     @media only screen and (max-width: 600px) {
       .wrapper {
@@ -101,11 +107,9 @@
       .content h2 {
         font-size: 18px;
       }
-      .cta-button {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-        text-align: center;
+      .code {
+        font-size: 28px;
+        letter-spacing: 6px;
       }
     }
   </style>
@@ -115,21 +119,27 @@
     <div class="wrapper">
       <div class="header">
         <div class="brand">OneSweepstake</div>
-        <p class="subtitle">Your magic link is ready</p>
+        <p class="subtitle">Your verification code is ready</p>
       </div>
 
       <div class="content">
         <h2>Sign in to your account</h2>
-        <p>Click the button below to sign in. This link will expire in 30 minutes.</p>
+        <p>Use the code below to sign in. This code will expire in 1 hour.</p>
 
-        <a href="{{ .ConfirmationURL }}" class="cta-button">Sign in</a>
+        <div class="code-box">
+          <div class="code">{{ .Token }}</div>
+          <div class="code-label">Verification Code</div>
+        </div>
 
-        <p style="font-size: 12px; color: #999999; margin-top: 24px;">Or copy and paste this link in your browser:</p>
-        <div class="link-fallback">{{ .ConfirmationURL }}</div>
+        <p style="font-size: 13px; color: #666666;">Enter this code on the OneSweepstake sign-in page to continue.</p>
+
+        <div class="warning">
+          <strong>Security tip:</strong> Never share this code with anyone. OneSweepstake will never ask you for this code outside of the sign-in page.
+        </div>
       </div>
 
       <div class="footer">
-        <p>Didn't request this? You can safely ignore this email.</p>
+        <p>Didn't request this code? You can safely ignore this email.</p>
         <p>OneSweepstake — Run football sweepstakes with your friends</p>
       </div>
     </div>

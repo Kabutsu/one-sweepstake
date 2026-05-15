@@ -20,6 +20,10 @@ export default function Layout() {
     return <Navigate to="/" replace />;
   }
 
+  if (!user.profileCustomized) {
+    return <Navigate to="/auth/setup" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-100 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-950 relative">
       <style>{`

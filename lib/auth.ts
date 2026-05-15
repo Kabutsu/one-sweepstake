@@ -10,6 +10,7 @@ export interface AuthUser {
   id: string;
   email: string;
   displayName: string | null;
+  profileCustomized: boolean;
   isAdmin: boolean;
 }
 
@@ -43,6 +44,7 @@ export async function getAuthUser(token?: string): Promise<AuthUser | null> {
     id: user.id,
     email: user.email,
     displayName: user.displayName,
+    profileCustomized: user.profileCustomized,
     isAdmin: user.isAdmin,
   };
 }

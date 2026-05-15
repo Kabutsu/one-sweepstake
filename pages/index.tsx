@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
 import LandingPage from "@/components/pages/LandingPage";
-import AuthVerify from "@/components/pages/AuthVerify";
 import ProfileSetup from "@/components/pages/ProfileSetup";
 import Dashboard from "@/components/pages/dashboard";
 import CreateSweepstake from "@/components/pages/create-sweepstake";
@@ -22,6 +21,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    document.title = "OneSweepstake - World Cup 2026";
   }, []);
 
   if (!mounted || isLoading) {
@@ -35,12 +35,28 @@ export default function Home() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
-        <Route path="/auth/verify" element={<AuthVerify />} />
+        <Route
+          path="/"
+          element={
+            user ? (
+              user.profileCustomized ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/auth/setup" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route
           path="/auth/setup"
           element={
-            user && !user.displayName ? <ProfileSetup /> : <Navigate to="/dashboard" replace />
+            user && !user.profileCustomized ? (
+              <ProfileSetup />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
           }
         />
         <Route path="/*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
