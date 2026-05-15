@@ -1,0 +1,26 @@
+name: Poll Match Data
+
+on:
+  schedule:
+    # Check every 2 hours to see if we should poll
+    - cron: "0 */2 * * *"
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check polling recommendation
+        id: check
+        run: |
+          RECOMMENDATION=$(curl -s https://onesweepstake.futbol/api/polling-recommendation)
+          SHOULD_POLL=$(echo $RECOMMENDATION | jq -r '.tournaments[0].shouldPoll')
+          INTERVAL=$(echo $RECOMMENDATION | jq -r '.recommendedIntervalMinutes')
+          echo "should_poll=$SHOULD_POLL" >> $GITHUB_OUTPUT
+          echo "interval=$INTERVAL" >> $GITHUB_OUTPUT
+
+      - name: Poll matches
+        if: steps.check.outputs.should_poll == 'true'
+        run: |
+          curl -X POST https://onesweepstake.futbol/api/poll-matches \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
