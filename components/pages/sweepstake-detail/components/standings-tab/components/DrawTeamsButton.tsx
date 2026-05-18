@@ -16,6 +16,7 @@ export default function DrawTeamsButton({ sweepstakeId, onDrawComplete }: DrawTe
       // Invalidate queries to refetch updated data
       utils.sweepstakes.getSweepstakeById.invalidate({ id: sweepstakeId });
       utils.sweepstakes.getTeamAssignments.invalidate({ sweepstakeId });
+      utils.sweepstakes.getLeaderboard.invalidate({ sweepstakeId });
       setShowModal(false);
       onDrawComplete?.();
     },
