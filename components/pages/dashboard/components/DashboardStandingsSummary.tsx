@@ -84,9 +84,11 @@ export default function DashboardStandingsSummary() {
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       {team.teamLogo && (
-                        <img
+                        <Image
                           src={team.teamLogo}
                           alt={team.teamName}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 object-contain"
                         />
                       )}

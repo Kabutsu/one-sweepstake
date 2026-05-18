@@ -9,6 +9,7 @@ export interface LeaderboardParticipant {
     teamId: string;
     teamName: string;
     teamLogo: string | null;
+    teamRanking: number | null;
     isEliminated: boolean;
   }>;
   teamsRemaining: number;
@@ -59,6 +60,7 @@ export function calculateLeaderboard(
       teamId: string;
       teamName: string;
       teamLogo: string | null;
+      teamRanking: number | null;
       isEliminated: boolean;
     }>;
   }>

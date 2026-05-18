@@ -34,10 +34,40 @@ export const tournaments = pgTable("tournaments", {
   teamCount: integer("team_count").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   logo: text("logo"),
-  seedingConfig: jsonb("seeding_config"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Teams table
+export const teams = pgTable("teams", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  tla: text("tla"),
+  crest: text("crest"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Teams-Tournaments junction table
+export const teamsTournaments = pgTable(
+  "teams_tournaments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    tournamentId: uuid("tournament_id")
+      .notNull()
+      .references(() => tournaments.id, { onDelete: "cascade" }),
+    ranking: integer("ranking"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueTeamTournament: unique("unique_team_tournament").on(table.teamId, table.tournamentId),
+    teamIdx: index("teams_tournaments_team_idx").on(table.teamId),
+    tournamentIdx: index("teams_tournaments_tournament_idx").on(table.tournamentId),
+  })
+);
 
 // Sweepstakes table
 export const sweepstakes = pgTable(
@@ -54,7 +84,6 @@ export const sweepstakes = pgTable(
     joinCode: text("join_code").notNull().unique(),
     isPrivate: boolean("is_private").default(false).notNull(),
     maxParticipants: integer("max_participants").notNull(),
-    currentParticipants: integer("current_participants").default(0).notNull(),
     drawCompletedAt: timestamp("draw_completed_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -93,14 +122,15 @@ export const teamAssignments = pgTable(
     participantId: uuid("participant_id")
       .notNull()
       .references(() => participants.id, { onDelete: "cascade" }),
-    teamId: text("team_id").notNull(),
-    teamName: text("team_name").notNull(),
-    teamLogo: text("team_logo"),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
     assignedAt: timestamp("assigned_at").defaultNow().notNull(),
   },
   (table) => ({
     uniqueAssignment: unique("unique_participant_team").on(table.participantId, table.teamId),
     participantIdx: index("team_assignments_participant_idx").on(table.participantId),
+    teamIdx: index("team_assignments_team_idx").on(table.teamId),
   })
 );
 
@@ -133,12 +163,12 @@ export const matchCache = pgTable(
       .notNull()
       .references(() => tournaments.id, { onDelete: "cascade" }),
     apiMatchId: text("api_match_id").notNull().unique(),
-    homeTeamId: text("home_team_id").notNull(),
-    homeTeamName: text("home_team_name").notNull(),
-    homeTeamCrest: text("home_team_crest"),
-    awayTeamId: text("away_team_id").notNull(),
-    awayTeamName: text("away_team_name").notNull(),
-    awayTeamCrest: text("away_team_crest"),
+    homeTeamId: text("home_team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    awayTeamId: text("away_team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
     homeScore: integer("home_score"),
     awayScore: integer("away_score"),
     status: text("status").notNull(),
@@ -152,6 +182,8 @@ export const matchCache = pgTable(
   (table) => ({
     tournamentIdx: index("match_cache_tournament_idx").on(table.tournamentId),
     statusIdx: index("match_cache_status_idx").on(table.status),
+    homeTeamIdx: index("match_cache_home_team_idx").on(table.homeTeamId),
+    awayTeamIdx: index("match_cache_away_team_idx").on(table.awayTeamId),
   })
 );
 
@@ -165,6 +197,25 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
   sweepstakes: many(sweepstakes),
   matchCache: many(matchCache),
+  teamsTournaments: many(teamsTournaments),
+}));
+
+export const teamsRelations = relations(teams, ({ many }) => ({
+  teamAssignments: many(teamAssignments),
+  homeMatches: many(matchCache, { relationName: "homeTeam" }),
+  awayMatches: many(matchCache, { relationName: "awayTeam" }),
+  teamsTournaments: many(teamsTournaments),
+}));
+
+export const teamsTournamentsRelations = relations(teamsTournaments, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamsTournaments.teamId],
+    references: [teams.id],
+  }),
+  tournament: one(tournaments, {
+    fields: [teamsTournaments.tournamentId],
+    references: [tournaments.id],
+  }),
 }));
 
 export const sweepstakesRelations = relations(sweepstakes, ({ one, many }) => ({
@@ -197,6 +248,10 @@ export const teamAssignmentsRelations = relations(teamAssignments, ({ one }) => 
     fields: [teamAssignments.participantId],
     references: [participants.id],
   }),
+  team: one(teams, {
+    fields: [teamAssignments.teamId],
+    references: [teams.id],
+  }),
 }));
 
 export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
@@ -214,5 +269,15 @@ export const matchCacheRelations = relations(matchCache, ({ one }) => ({
   tournament: one(tournaments, {
     fields: [matchCache.tournamentId],
     references: [tournaments.id],
+  }),
+  homeTeam: one(teams, {
+    fields: [matchCache.homeTeamId],
+    references: [teams.id],
+    relationName: "homeTeam",
+  }),
+  awayTeam: one(teams, {
+    fields: [matchCache.awayTeamId],
+    references: [teams.id],
+    relationName: "awayTeam",
   }),
 }));

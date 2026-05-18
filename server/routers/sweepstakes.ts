@@ -7,11 +7,13 @@ import {
   tournaments,
   teamAssignments,
   matchCache,
+  teams,
+  teamsTournaments,
 } from "@/db/schema";
-import { eq, and, lte, gte } from "drizzle-orm";
+import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw } from "@/utils/draw-algorithm";
-import { SeedingConfig } from "@/scripts/seed-tournament";
+import { getTournamentSeeding } from "@/scripts/seed-tournament";
 import { getEliminationStatus, Match } from "@/lib/elimination-tracker";
 import {
   calculateLeaderboard,
@@ -41,7 +43,6 @@ export const sweepstakesRouter = router({
         name: sweepstakes.name,
         tournamentName: tournaments.name,
         maxParticipants: sweepstakes.maxParticipants,
-        currentParticipants: sweepstakes.currentParticipants,
         drawCompletedAt: sweepstakes.drawCompletedAt,
         creatorId: sweepstakes.creatorId,
         joinCode: sweepstakes.joinCode,
@@ -52,7 +53,23 @@ export const sweepstakesRouter = router({
       .innerJoin(tournaments, eq(sweepstakes.tournamentId, tournaments.id))
       .where(eq(participants.userId, ctx.user.id));
 
-    return userSweepstakes;
+    // Get participant counts for each sweepstake
+    const sweepstakeIds = userSweepstakes.map((s) => s.id);
+    const participantCounts = await db
+      .select({
+        sweepstakeId: participants.sweepstakeId,
+        count: count(),
+      })
+      .from(participants)
+      .where(sql`${participants.sweepstakeId} IN ${sweepstakeIds}`)
+      .groupBy(participants.sweepstakeId);
+
+    const countMap = new Map(participantCounts.map((pc) => [pc.sweepstakeId, Number(pc.count)]));
+
+    return userSweepstakes.map((s) => ({
+      ...s,
+      currentParticipants: countMap.get(s.id) || 0,
+    }));
   }),
 
   getActiveTournament: protectedProcedure.query(async () => {
@@ -82,7 +99,6 @@ export const sweepstakesRouter = router({
           joinCode: sweepstakes.joinCode,
           isPrivate: sweepstakes.isPrivate,
           maxParticipants: sweepstakes.maxParticipants,
-          currentParticipants: sweepstakes.currentParticipants,
           drawCompletedAt: sweepstakes.drawCompletedAt,
           createdAt: sweepstakes.createdAt,
         })
@@ -124,6 +140,7 @@ export const sweepstakesRouter = router({
 
       return {
         ...sweepstake,
+        currentParticipants: allParticipants.length,
         tournamentActive,
         participants: allParticipants,
         isCreator: sweepstake.creatorId === ctx.user.id,
@@ -173,7 +190,6 @@ export const sweepstakesRouter = router({
           creatorId: ctx.user.id,
           joinCode,
           maxParticipants: input.maxParticipants,
-          currentParticipants: 1,
           isPrivate: false,
         })
         .returning();
@@ -232,27 +248,24 @@ export const sweepstakesRouter = router({
       }
 
       // Check if sweepstake is full
-      if (sweepstake.currentParticipants >= sweepstake.maxParticipants) {
+      const participantCount = await db
+        .select({ count: count() })
+        .from(participants)
+        .where(eq(participants.sweepstakeId, sweepstake.id));
+
+      const currentCount = Number(participantCount[0]?.count || 0);
+      if (currentCount >= sweepstake.maxParticipants) {
         throw new Error(
           "This sweepstake is full and cannot accept more participants. Please ask the creator to start a new one."
         );
       }
 
       try {
-        // Add user as participant and increment count in a single operation
-        // This helps prevent race conditions where multiple users join simultaneously
+        // Add user as participant
         await db.insert(participants).values({
           sweepstakeId: sweepstake.id,
           userId: ctx.user.id,
         });
-
-        // Increment current participant count
-        await db
-          .update(sweepstakes)
-          .set({
-            currentParticipants: sweepstake.currentParticipants + 1,
-          })
-          .where(eq(sweepstakes.id, sweepstake.id));
 
         return { sweepstakeId: sweepstake.id };
       } catch (error: any) {
@@ -295,7 +308,7 @@ export const sweepstakesRouter = router({
         );
       }
 
-      // Get tournament with seeding config
+      // Get tournament
       const [tournament] = await db
         .select()
         .from(tournaments)
@@ -306,7 +319,10 @@ export const sweepstakesRouter = router({
         throw new Error("Tournament not found");
       }
 
-      if (!tournament.seedingConfig) {
+      // Get tournament seeding configuration
+      const seedingConfig = await getTournamentSeeding(tournament.id);
+
+      if (!seedingConfig || !seedingConfig.teams || seedingConfig.teams.length === 0) {
         throw new Error("Tournament seeding configuration not found");
       }
 
@@ -332,7 +348,6 @@ export const sweepstakesRouter = router({
       }
 
       // Execute the draw algorithm
-      const seedingConfig = tournament.seedingConfig as SeedingConfig;
       const assignments = executeTeamDraw(sweepstakeParticipants, seedingConfig);
 
       // Insert team assignments into database
@@ -340,8 +355,6 @@ export const sweepstakesRouter = router({
         assignments.map((assignment) => ({
           participantId: assignment.participantId,
           teamId: assignment.teamId,
-          teamName: assignment.teamName,
-          teamLogo: assignment.teamLogo,
         }))
       );
 
@@ -392,10 +405,21 @@ export const sweepstakesRouter = router({
       }
 
       // Get all matches for the tournament to calculate elimination status
-      const matches = await db
+      const matchRecords = await db
         .select()
         .from(matchCache)
         .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
+
+      // Get all teams to enrich match data
+      const teamRecords = await db.select().from(teams);
+      const teamsMap = new Map(teamRecords.map((t) => [t.id, t]));
+
+      // Enrich matches with team names
+      const matches = matchRecords.map((match) => ({
+        ...match,
+        homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
+        awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
+      })) as Match[];
 
       // Calculate elimination status for all teams
       const eliminationStatus = getEliminationStatus(matches as Match[]);
@@ -406,8 +430,8 @@ export const sweepstakesRouter = router({
           id: teamAssignments.id,
           participantId: teamAssignments.participantId,
           teamId: teamAssignments.teamId,
-          teamName: teamAssignments.teamName,
-          teamLogo: teamAssignments.teamLogo,
+          teamName: teams.name,
+          teamLogo: teams.crest,
           assignedAt: teamAssignments.assignedAt,
           userId: participants.userId,
           displayName: users.displayName,
@@ -416,6 +440,7 @@ export const sweepstakesRouter = router({
         .from(teamAssignments)
         .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
         .innerJoin(users, eq(participants.userId, users.id))
+        .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
         .where(eq(participants.sweepstakeId, input.sweepstakeId));
 
       // Group by participant and include elimination status
@@ -479,12 +504,23 @@ export const sweepstakesRouter = router({
       }
 
       // Get all matches for elimination calculation
-      const matches = await db
+      const matchRecords = await db
         .select()
         .from(matchCache)
         .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
 
-      const eliminationStatus = getEliminationStatus(matches as Match[]);
+      // Get all teams to enrich match data
+      const teamRecords = await db.select().from(teams);
+      const teamsMap = new Map(teamRecords.map((t) => [t.id, t]));
+
+      // Enrich matches with team names
+      const matches = matchRecords.map((match) => ({
+        ...match,
+        homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
+        awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
+      })) as Match[];
+
+      const eliminationStatus = getEliminationStatus(matches);
 
       // Get all team assignments
       const assignments = await db
@@ -492,8 +528,9 @@ export const sweepstakesRouter = router({
           id: teamAssignments.id,
           participantId: teamAssignments.participantId,
           teamId: teamAssignments.teamId,
-          teamName: teamAssignments.teamName,
-          teamLogo: teamAssignments.teamLogo,
+          teamName: teams.name,
+          teamLogo: teams.crest,
+          teamRaking: teamsTournaments.ranking,
           userId: participants.userId,
           displayName: users.displayName,
           avatarUrl: users.avatarUrl,
@@ -501,7 +538,14 @@ export const sweepstakesRouter = router({
         .from(teamAssignments)
         .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
         .innerJoin(users, eq(participants.userId, users.id))
-        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+        .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
+        .innerJoin(teamsTournaments, eq(teams.id, teamsTournaments.teamId))
+        .where(
+          and(
+            eq(participants.sweepstakeId, input.sweepstakeId),
+            eq(teamsTournaments.tournamentId, sweepstake.tournamentId)
+          )
+        );
 
       // Group by participant
       const grouped = assignments.reduce(
@@ -519,6 +563,7 @@ export const sweepstakesRouter = router({
             teamId: assignment.teamId,
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
+            teamRanking: assignment.teamRaking,
             isEliminated: eliminationStatus.get(assignment.teamId) || false,
           });
           return acc;
@@ -536,12 +581,23 @@ export const sweepstakesRouter = router({
     .input(z.object({ tournamentId: z.string().uuid() }))
     .query(async ({ input }) => {
       // Get all matches for the tournament
-      const matches = await db
+      const matchRecords = await db
         .select()
         .from(matchCache)
         .where(eq(matchCache.tournamentId, input.tournamentId));
 
-      const groupStandings = getAllGroupStandings(matches as Match[]);
+      // Get all teams to enrich match data
+      const teamRecords = await db.select().from(teams);
+      const teamsMap = new Map(teamRecords.map((t) => [t.id, t]));
+
+      // Enrich matches with team names
+      const matches = matchRecords.map((match) => ({
+        ...match,
+        homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
+        awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
+      })) as Match[];
+
+      const groupStandings = getAllGroupStandings(matches);
 
       // Convert Map to object for JSON serialization
       const standingsObject: Record<string, any[]> = {};
@@ -594,18 +650,28 @@ export const sweepstakesRouter = router({
         .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
 
       if (allMatches.length === 0) {
-        allMatches = matches as Match[];
+        // Get all teams to enrich match data
+        const teamRecords = await db.select().from(teams);
+        const teamsMap = new Map(teamRecords.map((t) => [t.id, t]));
+
+        // Enrich matches with team names
+        allMatches = matches.map((match) => ({
+          ...match,
+          homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
+          awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
+        })) as Match[];
       }
 
-      const eliminationStatus = getEliminationStatus(matches as Match[]);
+      const eliminationStatus = getEliminationStatus(allMatches);
 
       const assignments = await db
         .select({
           teamId: teamAssignments.teamId,
-          teamName: teamAssignments.teamName,
-          teamLogo: teamAssignments.teamLogo,
+          teamName: teams.name,
+          teamLogo: teams.crest,
         })
         .from(teamAssignments)
+        .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
         .where(eq(teamAssignments.participantId, sweepstake.participantId));
 
       const teamsWithStatus = assignments.map((a) => ({

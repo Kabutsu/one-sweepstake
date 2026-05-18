@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -149,9 +150,11 @@ export default function ProfileSetup() {
           <div className="flex flex-col items-center space-y-3">
             <div className="relative">
               {previewUrl ? (
-                <img
+                <Image
                   src={previewUrl}
                   alt="Profile preview"
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-full object-cover border-4 border-primary-200 dark:border-primary-800"
                 />
               ) : (
