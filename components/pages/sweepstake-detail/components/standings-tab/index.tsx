@@ -45,8 +45,17 @@ export default function StandingsTab({
                   return a.isEliminated ? 1 : -1;
                 }
 
-                // 2. Return original order (which is based on draw order) to avoid unnecessary reordering
-                return 0;
+                // 2. Return ranking order
+                if (
+                  a.teamRanking != null &&
+                  b.teamRanking != null &&
+                  a.teamRanking !== b.teamRanking
+                ) {
+                  return a.teamRanking - b.teamRanking;
+                }
+
+                // 3. Alphabetical by team name
+                return a.teamName.localeCompare(b.teamName);
               });
             });
 

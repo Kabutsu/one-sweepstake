@@ -8,6 +8,7 @@ import {
   teamAssignments,
   matchCache,
   teams,
+  teamsTournaments,
 } from "@/db/schema";
 import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -529,6 +530,7 @@ export const sweepstakesRouter = router({
           teamId: teamAssignments.teamId,
           teamName: teams.name,
           teamLogo: teams.crest,
+          teamRaking: teamsTournaments.ranking,
           userId: participants.userId,
           displayName: users.displayName,
           avatarUrl: users.avatarUrl,
@@ -537,7 +539,13 @@ export const sweepstakesRouter = router({
         .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
         .innerJoin(users, eq(participants.userId, users.id))
         .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
-        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+        .innerJoin(teamsTournaments, eq(teams.id, teamsTournaments.teamId))
+        .where(
+          and(
+            eq(participants.sweepstakeId, input.sweepstakeId),
+            eq(teamsTournaments.tournamentId, sweepstake.tournamentId)
+          )
+        );
 
       // Group by participant
       const grouped = assignments.reduce(
@@ -555,6 +563,7 @@ export const sweepstakesRouter = router({
             teamId: assignment.teamId,
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
+            teamRanking: assignment.teamRaking,
             isEliminated: eliminationStatus.get(assignment.teamId) || false,
           });
           return acc;
