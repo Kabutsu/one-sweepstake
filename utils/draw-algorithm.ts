@@ -9,8 +9,6 @@ export interface Participant {
 export interface TeamAssignment {
   participantId: string;
   teamId: string;
-  teamName: string;
-  teamLogo: string | null;
 }
 
 /**
@@ -145,8 +143,6 @@ export function executeTeamDraw(
       assignments.push({
         participantId: participant.id,
         teamId: team.id || team.tla, // Use ID if available, otherwise TLA
-        teamName: team.name,
-        teamLogo: team.crest || null,
       });
 
       participantTeamCounts[participantIndex]++;

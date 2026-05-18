@@ -90,13 +90,45 @@ export async function updateTournamentSeeding(
   seedingConfig: SeedingConfig
 ): Promise<void> {
   const { db } = await import("../db");
-  const { tournaments } = await import("../db/schema");
+  const { tournaments, teams, teamsTournaments } = await import("../db/schema");
   const { eq } = await import("drizzle-orm");
 
+  // Insert teams into teams table (ignore duplicates)
+  for (const team of seedingConfig.teams) {
+    if (!team.id) {
+      console.warn(`Skipping team ${team.name} - no ID available`);
+      continue;
+    }
+
+    await db
+      .insert(teams)
+      .values({
+        id: team.id,
+        name: team.name,
+        tla: team.tla,
+        crest: team.crest,
+      })
+      .onConflictDoNothing();
+  }
+
+  // Insert team-tournament relationships
+  for (const team of seedingConfig.teams) {
+    if (!team.id) continue;
+
+    await db
+      .insert(teamsTournaments)
+      .values({
+        teamId: team.id,
+        tournamentId: tournamentId,
+        ranking: team.ranking,
+      })
+      .onConflictDoNothing();
+  }
+
+  // Update tournament timestamp
   await db
     .update(tournaments)
     .set({
-      seedingConfig: seedingConfig as any,
       updatedAt: new Date(),
     })
     .where(eq(tournaments.id, tournamentId));
@@ -107,20 +139,34 @@ export async function updateTournamentSeeding(
  */
 export async function getTournamentSeeding(tournamentId: string): Promise<SeedingConfig | null> {
   const { db } = await import("../db");
-  const { tournaments } = await import("../db/schema");
+  const { teams, teamsTournaments } = await import("../db/schema");
   const { eq } = await import("drizzle-orm");
 
-  const [tournament] = await db
-    .select()
-    .from(tournaments)
-    .where(eq(tournaments.id, tournamentId))
-    .limit(1);
+  const teamRecords = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      tla: teams.tla,
+      crest: teams.crest,
+      ranking: teamsTournaments.ranking,
+    })
+    .from(teamsTournaments)
+    .innerJoin(teams, eq(teamsTournaments.teamId, teams.id))
+    .where(eq(teamsTournaments.tournamentId, tournamentId));
 
-  if (!tournament || !tournament.seedingConfig) {
+  if (teamRecords.length === 0) {
     return null;
   }
 
-  return tournament.seedingConfig as SeedingConfig;
+  return {
+    teams: teamRecords.map((t) => ({
+      id: t.id,
+      name: t.name,
+      tla: t.tla || "",
+      crest: t.crest || "",
+      ranking: t.ranking || undefined,
+    })),
+  };
 }
 
 /**
