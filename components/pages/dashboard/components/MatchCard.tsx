@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface MatchCardProps {
   homeTeamName: string;
   awayTeamName: string;
@@ -85,11 +87,12 @@ export default function MatchCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {homeTeamCrest && (
-              <img
+              <Image
                 src={homeTeamCrest}
                 alt={`${homeTeamName} flag`}
+                width={24}
+                height={24}
                 className="w-6 h-6 object-contain flex-shrink-0"
-                loading="lazy"
               />
             )}
             <span className="font-semibold text-gray-900 dark:text-white truncate">
@@ -108,11 +111,12 @@ export default function MatchCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {awayTeamCrest && (
-              <img
+              <Image
                 src={awayTeamCrest}
                 alt={`${awayTeamName} flag`}
+                width={24}
+                height={24}
                 className="w-6 h-6 object-contain flex-shrink-0"
-                loading="lazy"
               />
             )}
             <span className="font-semibold text-gray-900 dark:text-white truncate">

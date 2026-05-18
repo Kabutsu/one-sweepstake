@@ -50,7 +50,7 @@ export default function OverviewTab({ sweepstake }: OverviewTabProps) {
             <div className="flex-1">
               <h3 className="font-bold text-green-900 dark:text-green-100 mb-1">Draw Complete!</h3>
               <p className="text-sm text-green-700 dark:text-green-300">
-                Teams have been randomly assigned to all participants. Check the Teams tab to see
+                Teams have been randomly assigned to all participants. Check the Standings tab to see
                 your assignments. The sweepstake is now locked and no new participants can join.
               </p>
               <p className="text-xs text-green-600 dark:text-green-400 mt-2">

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { trpc } from "@/lib/trpc";
 import { LeaderboardParticipant } from "@/lib/leaderboard";
 
@@ -227,9 +229,11 @@ export default function StandingsTab({
                         `}
                       >
                         {team.teamLogo && (
-                          <img
+                          <Image
                             src={team.teamLogo}
                             alt={team.teamName}
+                            width={24}
+                            height={24}
                             className={`w-6 h-6 object-contain ${team.isEliminated ? "grayscale" : ""}`}
                           />
                         )}
@@ -292,9 +296,11 @@ export default function StandingsTab({
                         className="flex items-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-800/50"
                       >
                         {team.teamLogo && (
-                          <img
+                          <Image
                             src={team.teamLogo}
                             alt={team.teamName}
+                            width={24}
+                            height={24}
                             className="w-6 h-6 object-contain grayscale"
                           />
                         )}
