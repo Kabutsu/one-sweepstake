@@ -6,13 +6,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 export default function DashboardStandingsSummary() {
   const { data: summary, isLoading } = trpc.sweepstakes.getDashboardSummary.useQuery();
 
-  if (isLoading) {
-    return (
-      <div className="glass p-6 rounded-2xl shadow-xl mb-6 flex items-center justify-center">
-        <LoadingSpinner size="md" />
-      </div>
-    );
-  }
+  if (isLoading) return null; // Don't show anything while loading - this is a small section and we don't want to show a spinner here
 
   if (!summary || summary.activeSweepstakes === 0) {
     return null; // Don't show anything if no active sweepstakes
