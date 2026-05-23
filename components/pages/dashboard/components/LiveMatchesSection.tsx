@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import MatchCard from "./MatchCard";
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Match {
   id: string;
