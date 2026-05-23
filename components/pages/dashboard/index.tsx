@@ -14,7 +14,7 @@ export default function Dashboard() {
     trpc.sweepstakes.getUserSweepstakes.useQuery();
   const { data: activeTournament } = trpc.sweepstakes.getActiveTournament.useQuery();
 
-  const { data: matchData } = trpc.matches.getLiveMatches.useQuery(
+  const { data: matchData, isLoading: matchLoading } = trpc.matches.getLiveMatches.useQuery(
     { tournamentId: activeTournament?.id ?? "" },
     { enabled: !!activeTournament?.id }
   );
@@ -43,7 +43,7 @@ export default function Dashboard() {
 
       <DashboardStandingsSummary />
 
-      <LiveMatchesSection matches={displayMatches} />
+      <LiveMatchesSection matches={displayMatches} isLoading={matchLoading} />
 
       <ActionBar />
 

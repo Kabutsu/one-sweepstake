@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "fallback-secret-key");
-const TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+const TOKEN_MAX_AGE = 60 * 24 * 60 * 60; // 60 days in seconds
 
 export interface AuthUser {
   id: string;
@@ -18,7 +18,7 @@ export async function createToken(userId: string): Promise<string> {
   return new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("60d")
     .sign(JWT_SECRET);
 }
 

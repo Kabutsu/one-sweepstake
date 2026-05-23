@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MatchCard from "./MatchCard";
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface Match {
   id: string;
@@ -18,10 +19,19 @@ interface Match {
 
 interface LiveMatchesSectionProps {
   matches: Match[];
+  isLoading: boolean;
 }
 
-export default function LiveMatchesSection({ matches }: LiveMatchesSectionProps) {
+export default function LiveMatchesSection({ matches, isLoading }: LiveMatchesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="glass p-6 shadow-xl rounded-xl flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   if (!matches.length) {
     return (
