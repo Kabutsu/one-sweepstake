@@ -9,7 +9,13 @@ interface DrawTeamsButtonProps {
 
 export default function DrawTeamsButton({ sweepstakeId, onDrawComplete }: DrawTeamsButtonProps) {
   const [showModal, setShowModal] = useState(false);
+  const [drawType, setDrawType] = useState<"balanced" | "unbalanced">("balanced");
   const utils = trpc.useUtils();
+
+  // Get sweepstake data to determine if unbalanced option should be shown
+  const { data: sweepstake } = trpc.sweepstakes.getSweepstakeById.useQuery({
+    id: sweepstakeId,
+  });
 
   const executeDraw = trpc.sweepstakes.executeDraw.useMutation({
     onSuccess: () => {
@@ -23,8 +29,14 @@ export default function DrawTeamsButton({ sweepstakeId, onDrawComplete }: DrawTe
   });
 
   const handleConfirm = () => {
-    executeDraw.mutate({ sweepstakeId });
+    executeDraw.mutate({ sweepstakeId, drawType });
   };
+
+  // Calculate if unbalanced option should be available
+  // Show when participants <= totalTeams / 2
+  const participantCount = sweepstake?.currentParticipants || 0;
+  const totalTeams = sweepstake?.totalTeams || 0;
+  const showDrawTypeSelector = participantCount > 0 && participantCount <= totalTeams / 2;
 
   return (
     <>
@@ -71,10 +83,53 @@ export default function DrawTeamsButton({ sweepstakeId, onDrawComplete }: DrawTe
                   Confirm Team Draw
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Are you ready to draw teams?
+                  {showDrawTypeSelector
+                    ? "Choose your draw type and confirm"
+                    : "Are you ready to draw teams?"}
                 </p>
               </div>
             </div>
+
+            {/* Draw Type Selector */}
+            {showDrawTypeSelector && (
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Draw Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDrawType("balanced")}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      drawType === "balanced"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white mb-1">Balanced</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      Everyone gets a mix of top, mid, and bottom-tier teams
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrawType("unbalanced")}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      drawType === "unbalanced"
+                        ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Unbalanced
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      Fully random - some may get all top or bottom teams
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Content */}
             <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">

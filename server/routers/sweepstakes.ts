@@ -12,7 +12,7 @@ import {
 } from "@/db/schema";
 import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
-import { executeTeamDraw } from "@/utils/draw-algorithm";
+import { executeTeamDraw, executeUnbalancedDraw } from "@/utils/draw-algorithm";
 import { getTournamentSeeding } from "@/scripts/seed-tournament";
 import { getEliminationStatus, Match } from "@/lib/elimination-tracker";
 import {
@@ -138,12 +138,19 @@ export const sweepstakesRouter = router({
       const tournamentHasStarted = sweepstake.tournamentStartDate <= now;
       const tournamentActive = sweepstake.tournamentIsActive || tournamentHasStarted;
 
+      // Get total teams count for this tournament
+      const teamCount = await db
+        .select({ count: count() })
+        .from(teamsTournaments)
+        .where(eq(teamsTournaments.tournamentId, sweepstake.tournamentId));
+
       return {
         ...sweepstake,
         currentParticipants: allParticipants.length,
         tournamentActive,
         participants: allParticipants,
         isCreator: sweepstake.creatorId === ctx.user.id,
+        totalTeams: Number(teamCount[0]?.count || 0),
       };
     }),
 
@@ -281,7 +288,12 @@ export const sweepstakesRouter = router({
     }),
 
   executeDraw: protectedProcedure
-    .input(z.object({ sweepstakeId: z.string().uuid() }))
+    .input(
+      z.object({
+        sweepstakeId: z.string().uuid(),
+        drawType: z.enum(["balanced", "unbalanced"]).default("balanced"),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       // Get sweepstake with tournament
       const [sweepstake] = await db
@@ -347,8 +359,11 @@ export const sweepstakesRouter = router({
         );
       }
 
-      // Execute the draw algorithm
-      const assignments = executeTeamDraw(sweepstakeParticipants, seedingConfig);
+      // Execute the draw algorithm based on draw type
+      const assignments =
+        input.drawType === "unbalanced"
+          ? executeUnbalancedDraw(sweepstakeParticipants, seedingConfig)
+          : executeTeamDraw(sweepstakeParticipants, seedingConfig);
 
       // Insert team assignments into database
       await db.insert(teamAssignments).values(
