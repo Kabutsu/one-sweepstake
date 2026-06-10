@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -12,13 +12,16 @@ type TabType = "overview" | "standings" | "participants" | "chat";
 export default function SweepstakeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   const {
     data: sweepstake,
     isLoading,
     error,
   } = trpc.sweepstakes.getSweepstakeById.useQuery({ id: id! }, { enabled: !!id });
+
+  const [activeTab, setActiveTab] = useState<TabType>(
+    sweepstake?.drawCompletedAt ? "standings" : "overview"
+  );
 
   const scrollToTab = (tabId: TabType) => {
     const element = document.getElementById(`tab-${tabId}`);
@@ -31,6 +34,12 @@ export default function SweepstakeDetail() {
     setActiveTab(tabId);
     scrollToTab(tabId);
   };
+
+  useEffect(() => {
+    if (sweepstake) {
+      handleTabChange(sweepstake.drawCompletedAt ? "standings" : "overview");
+    }
+  }, [sweepstake?.drawCompletedAt]);
 
   if (isLoading) {
     return (
