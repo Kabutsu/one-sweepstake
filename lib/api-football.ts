@@ -216,6 +216,46 @@ export class APIFootballClient {
       );
     }
   }
+
+  async fetchMatchesByDate(date: string): Promise<APIFootballMatch[]> {
+    try {
+      const url = `${this.baseUrl}/fixtures?date=${date}`;
+      const response = await fetch(url, {
+        headers: {
+          "x-apisports-key": this.apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new APIFootballError(
+          `Failed to fetch matches by date: ${response.statusText}`,
+          response.status,
+          errorBody
+        );
+      }
+
+      const data: APIFootballResponse = await response.json();
+
+      // Check for API errors
+      if (data.errors && data.errors.length > 0) {
+        throw new APIFootballError(
+          `API-Football returned errors: ${JSON.stringify(data.errors)}`,
+          response.status,
+          JSON.stringify(data.errors)
+        );
+      }
+
+      return data.response;
+    } catch (error) {
+      if (error instanceof APIFootballError) {
+        throw error;
+      }
+      throw new APIFootballError(
+        `Network error while fetching matches by date: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
 }
 
 let _apiFootballClient: APIFootballClient | null = null;

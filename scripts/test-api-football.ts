@@ -81,6 +81,44 @@ async function testAPIFootball() {
     return;
   }
 
+  // Test 4: Fetch matches by date (today)
+  console.log("4️⃣ Testing API-Football fetch by date...");
+  try {
+    const client = getAPIFootballClient();
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    console.log(`   Fetching matches for date: ${today}`);
+    
+    const matchesByDate = await client.fetchMatchesByDate(today);
+    console.log(`✅ Successfully fetched ${matchesByDate.length} total matches for ${today}\n`);
+
+    // Filter to World Cup matches
+    const worldCupMatches = matchesByDate.filter((m) => m.league.id === 1);
+    console.log(`   Found ${worldCupMatches.length} World Cup matches:\n`);
+
+    if (worldCupMatches.length > 0) {
+      for (const match of worldCupMatches) {
+        console.log(
+          `   ${match.teams.home.name} ${match.goals.home ?? "-"} - ${match.goals.away ?? "-"} ${match.teams.away.name}`
+        );
+        console.log(`      Status: ${match.fixture.status.short} (${match.fixture.status.long})`);
+        console.log(`      Mapped Status: ${mapAPIFootballStatus(match.fixture.status.short)}`);
+        
+        if (match.score.fulltime.home !== null && match.score.fulltime.away !== null) {
+          console.log(
+            `      Final Score: ${match.score.fulltime.home} - ${match.score.fulltime.away}`
+          );
+        }
+        console.log();
+      }
+    }
+  } catch (error) {
+    console.error("❌ Failed to fetch matches by date:", error);
+    if (error instanceof Error) {
+      console.error("   Error message:", error.message);
+    }
+    return;
+  }
+
   console.log("✅ All tests completed successfully!");
 }
 

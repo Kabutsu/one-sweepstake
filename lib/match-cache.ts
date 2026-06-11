@@ -17,6 +17,7 @@ export interface UpdateMatchCacheResult {
   footballDataSuccess: boolean;
   apiFootballSuccess: boolean;
   liveMatchesUpdated: number;
+  finishedMatchesBackfilled: number;
 }
 
 export async function cleanupOldMatches(tournamentId: string): Promise<number> {
@@ -50,6 +51,7 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
     footballDataSuccess: false,
     apiFootballSuccess: false,
     liveMatchesUpdated: 0,
+    finishedMatchesBackfilled: 0,
   };
 
   try {
@@ -135,10 +137,63 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
       }
     } catch (error) {
       result.errors.push(
-        `API-Football failed: ${error instanceof Error ? error.message : String(error)}`
+        `API-Football live matches failed: ${error instanceof Error ? error.message : String(error)}`
       );
       result.apiFootballSuccess = false;
       // Not a critical failure - we still have football-data.org data
+    }
+
+    // Phase 3: Backfill finished matches with null scores from API-Football
+    try {
+      const apiFootballClient = getAPIFootballClient();
+      const teamMapping = loadTeamMappings();
+      
+      // Find finished matches with null scores
+      const finishedMatchesWithNullScores = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, tournament.id));
+
+      const matchesToBackfill = finishedMatchesWithNullScores.filter(
+        (m) => m.status === "FINISHED" && (m.homeScore === null || m.awayScore === null)
+      );
+
+      if (matchesToBackfill.length > 0) {
+        // Get unique dates to fetch
+        const datesToFetch = new Set<string>();
+        for (const match of matchesToBackfill) {
+          const dateStr = match.scheduledAt.toISOString().split("T")[0]; // YYYY-MM-DD
+          datesToFetch.add(dateStr);
+        }
+
+        console.log(`Backfilling ${matchesToBackfill.length} finished matches from ${datesToFetch.size} dates`);
+
+        // Fetch matches for each date
+        for (const date of datesToFetch) {
+          try {
+            const matchesOnDate = await apiFootballClient.fetchMatchesByDate(date);
+            // Filter to only World Cup matches
+            const worldCupMatches = matchesOnDate.filter((m) => m.league.id === 1);
+            
+            if (worldCupMatches.length > 0) {
+              result.finishedMatchesBackfilled += await updateLiveMatches(
+                tournament.id,
+                worldCupMatches,
+                teamMapping
+              );
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to backfill matches for date ${date}: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      result.errors.push(
+        `API-Football backfill failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+      // Not a critical failure
     }
   } catch (error) {
     result.errors.push(
