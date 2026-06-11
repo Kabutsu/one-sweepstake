@@ -133,7 +133,11 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
 
       if (liveMatches.length > 0) {
         const teamMapping = loadTeamMappings();
-        result.liveMatchesUpdated = await updateLiveMatches(tournament.id, liveMatches, teamMapping);
+        result.liveMatchesUpdated = await updateLiveMatches(
+          tournament.id,
+          liveMatches,
+          teamMapping
+        );
       }
     } catch (error) {
       result.errors.push(
@@ -147,7 +151,7 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
     try {
       const apiFootballClient = getAPIFootballClient();
       const teamMapping = loadTeamMappings();
-      
+
       // Find finished matches with null scores
       const finishedMatchesWithNullScores = await db
         .select()
@@ -166,7 +170,9 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
           datesToFetch.add(dateStr);
         }
 
-        console.log(`Backfilling ${matchesToBackfill.length} finished matches from ${datesToFetch.size} dates`);
+        console.log(
+          `Backfilling ${matchesToBackfill.length} finished matches from ${datesToFetch.size} dates`
+        );
 
         // Fetch matches for each date
         for (const date of datesToFetch) {
@@ -174,7 +180,7 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
             const matchesOnDate = await apiFootballClient.fetchMatchesByDate(date);
             // Filter to only World Cup matches
             const worldCupMatches = matchesOnDate.filter((m) => m.league.id === 1);
-            
+
             if (worldCupMatches.length > 0) {
               result.finishedMatchesBackfilled += await updateLiveMatches(
                 tournament.id,
@@ -265,7 +271,7 @@ async function updateLiveMatches(
 
       // Merge API-Football data with existing rawData
       const mergedRawData = {
-        ...(typeof existingMatch.rawData === 'object' && existingMatch.rawData !== null
+        ...(typeof existingMatch.rawData === "object" && existingMatch.rawData !== null
           ? existingMatch.rawData
           : {}),
         apiFootball: match, // Store complete API-Football response

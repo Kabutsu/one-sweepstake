@@ -51,7 +51,7 @@ async function main() {
   try {
     console.log("Fetching teams from football-data.org API...");
     const teams = await fetchTeamsFromFootballData();
-    
+
     console.log(`Found ${teams.length} teams`);
 
     // Create mapping entries

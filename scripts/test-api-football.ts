@@ -6,16 +6,16 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // Now import after env is loaded
 async function testAPIFootball() {
-  const {
-    getAPIFootballClient,
-    mapAPIFootballStatus,
-    loadTeamMappings,
-  } = await import("../lib/api-football");
+  const { getAPIFootballClient, mapAPIFootballStatus, loadTeamMappings } =
+    await import("../lib/api-football");
 
   console.log("🔍 Testing API-Football Integration...\n");
 
   // Verify API key is loaded
-  console.log("🔑 API Key status:", process.env.API_FOOTBALL_API_KEY ? "✅ Loaded" : "❌ Not found");
+  console.log(
+    "🔑 API Key status:",
+    process.env.API_FOOTBALL_API_KEY ? "✅ Loaded" : "❌ Not found"
+  );
   console.log();
 
   // Test 1: Load team mappings
@@ -56,17 +56,15 @@ async function testAPIFootball() {
         console.log(`      Mapped Status: ${mapAPIFootballStatus(match.fixture.status.short)}`);
         console.log(`      Home Team API-Football ID: ${match.teams.home.id}`);
         console.log(`      Away Team API-Football ID: ${match.teams.away.id}`);
-        
+
         const teamMapping = loadTeamMappings();
         const homeTeamId = teamMapping.get(match.teams.home.id);
         const awayTeamId = teamMapping.get(match.teams.away.id);
-        console.log(`      Home Team Football-Data ID: ${homeTeamId || 'NOT FOUND'}`);
-        console.log(`      Away Team Football-Data ID: ${awayTeamId || 'NOT FOUND'}`);
-        
+        console.log(`      Home Team Football-Data ID: ${homeTeamId || "NOT FOUND"}`);
+        console.log(`      Away Team Football-Data ID: ${awayTeamId || "NOT FOUND"}`);
+
         if (match.score.penalty.home !== null && match.score.penalty.away !== null) {
-          console.log(
-            `      Penalties: ${match.score.penalty.home} - ${match.score.penalty.away}`
-          );
+          console.log(`      Penalties: ${match.score.penalty.home} - ${match.score.penalty.away}`);
         }
         console.log();
       }
@@ -87,7 +85,7 @@ async function testAPIFootball() {
     const client = getAPIFootballClient();
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     console.log(`   Fetching matches for date: ${today}`);
-    
+
     const matchesByDate = await client.fetchMatchesByDate(today);
     console.log(`✅ Successfully fetched ${matchesByDate.length} total matches for ${today}\n`);
 
@@ -102,7 +100,7 @@ async function testAPIFootball() {
         );
         console.log(`      Status: ${match.fixture.status.short} (${match.fixture.status.long})`);
         console.log(`      Mapped Status: ${mapAPIFootballStatus(match.fixture.status.short)}`);
-        
+
         if (match.score.fulltime.home !== null && match.score.fulltime.away !== null) {
           console.log(
             `      Final Score: ${match.score.fulltime.home} - ${match.score.fulltime.away}`
