@@ -96,6 +96,47 @@ function isKnockoutMatch(match: Match): boolean {
 }
 
 /**
+ * Determine penalty shootout winner from match rawData
+ * Returns the team ID of the winner, or null if no penalty data available
+ */
+function getPenaltyWinner(match: Match): string | null {
+  // Check API-Football format first (in apiFootball nested object)
+  if (match.rawData?.apiFootball?.score?.penalty) {
+    const penaltyScore = match.rawData.apiFootball.score.penalty;
+    if (penaltyScore.home !== null && penaltyScore.away !== null) {
+      if (penaltyScore.home > penaltyScore.away) {
+        return match.homeTeamId;
+      } else if (penaltyScore.away > penaltyScore.home) {
+        return match.awayTeamId;
+      }
+    }
+  }
+
+  // Check football-data.org format (if they provide penalty scores)
+  if (match.rawData?.score?.penalties) {
+    const penaltyScore = match.rawData.score.penalties;
+    if (penaltyScore.home !== null && penaltyScore.away !== null) {
+      if (penaltyScore.home > penaltyScore.away) {
+        return match.homeTeamId;
+      } else if (penaltyScore.away > penaltyScore.home) {
+        return match.awayTeamId;
+      }
+    }
+  }
+
+  // Check if winner is indicated in the match data
+  if (match.rawData?.apiFootball?.teams) {
+    if (match.rawData.apiFootball.teams.home.winner === true) {
+      return match.homeTeamId;
+    } else if (match.rawData.apiFootball.teams.away.winner === true) {
+      return match.awayTeamId;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Calculate group standings from match results
  */
 export function calculateGroupStandings(matches: Match[]): Map<string, GroupStanding[]> {
@@ -269,12 +310,26 @@ export function isTeamEliminated(
 
   for (const match of knockoutMatches) {
     if (match.homeScore !== null && match.awayScore !== null) {
-      // Team lost knockout match (regular time or after extra time/penalties)
+      // Check regular/extra time scores first
       if (match.homeTeamId === teamId && match.homeScore < match.awayScore) {
         return true;
       }
       if (match.awayTeamId === teamId && match.awayScore < match.homeScore) {
         return true;
+      }
+
+      // Handle penalty shootouts when scores are tied
+      if (match.homeScore === match.awayScore) {
+        const penaltyWinner = getPenaltyWinner(match);
+        if (penaltyWinner) {
+          // Team lost on penalties
+          if (match.homeTeamId === teamId && penaltyWinner === match.awayTeamId) {
+            return true;
+          }
+          if (match.awayTeamId === teamId && penaltyWinner === match.homeTeamId) {
+            return true;
+          }
+        }
       }
     }
   }

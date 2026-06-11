@@ -1,0 +1,244 @@
+{
+  "mapping": [
+    {
+      "teamName": "Uruguay",
+      "footballAPIId": 758,
+      "APIFootballId": 7
+    },
+    {
+      "teamName": "Germany",
+      "footballAPIId": 759,
+      "APIFootballId": 25
+    },
+    {
+      "teamName": "Spain",
+      "footballAPIId": 760,
+      "APIFootballId": 9
+    },
+    {
+      "teamName": "Paraguay",
+      "footballAPIId": 761,
+      "APIFootballId": 2380
+    },
+    {
+      "teamName": "Argentina",
+      "footballAPIId": 762,
+      "APIFootballId": 26
+    },
+    {
+      "teamName": "Ghana",
+      "footballAPIId": 763,
+      "APIFootballId": 1504
+    },
+    {
+      "teamName": "Brazil",
+      "footballAPIId": 764,
+      "APIFootballId": 6
+    },
+    {
+      "teamName": "Portugal",
+      "footballAPIId": 765,
+      "APIFootballId": 27
+    },
+    {
+      "teamName": "Japan",
+      "footballAPIId": 766,
+      "APIFootballId": 12
+    },
+    {
+      "teamName": "Mexico",
+      "footballAPIId": 769,
+      "APIFootballId": 16
+    },
+    {
+      "teamName": "England",
+      "footballAPIId": 770,
+      "APIFootballId": 10
+    },
+    {
+      "teamName": "United States",
+      "footballAPIId": 771,
+      "APIFootballId": 2384
+    },
+    {
+      "teamName": "South Korea",
+      "footballAPIId": 772,
+      "APIFootballId": 17
+    },
+    {
+      "teamName": "France",
+      "footballAPIId": 773,
+      "APIFootballId": 2
+    },
+    {
+      "teamName": "South Africa",
+      "footballAPIId": 774,
+      "APIFootballId": 1531
+    },
+    {
+      "teamName": "Algeria",
+      "footballAPIId": 778,
+      "APIFootballId": 1532
+    },
+    {
+      "teamName": "Australia",
+      "footballAPIId": 779,
+      "APIFootballId": 20
+    },
+    {
+      "teamName": "New Zealand",
+      "footballAPIId": 783,
+      "APIFootballId": 4673
+    },
+    {
+      "teamName": "Switzerland",
+      "footballAPIId": 788,
+      "APIFootballId": 15
+    },
+    {
+      "teamName": "Ecuador",
+      "footballAPIId": 791,
+      "APIFootballId": 2382
+    },
+    {
+      "teamName": "Sweden",
+      "footballAPIId": 792,
+      "APIFootballId": 5
+    },
+    {
+      "teamName": "Czechia",
+      "footballAPIId": 798,
+      "APIFootballId": 770
+    },
+    {
+      "teamName": "Croatia",
+      "footballAPIId": 799,
+      "APIFootballId": 3
+    },
+    {
+      "teamName": "Saudi Arabia",
+      "footballAPIId": 801,
+      "APIFootballId": 23
+    },
+    {
+      "teamName": "Tunisia",
+      "footballAPIId": 802,
+      "APIFootballId": 28
+    },
+    {
+      "teamName": "Turkey",
+      "footballAPIId": 803,
+      "APIFootballId": 777
+    },
+    {
+      "teamName": "Senegal",
+      "footballAPIId": 804,
+      "APIFootballId": 13
+    },
+    {
+      "teamName": "Belgium",
+      "footballAPIId": 805,
+      "APIFootballId": 1
+    },
+    {
+      "teamName": "Morocco",
+      "footballAPIId": 815,
+      "APIFootballId": 31
+    },
+    {
+      "teamName": "Austria",
+      "footballAPIId": 816,
+      "APIFootballId": 775
+    },
+    {
+      "teamName": "Colombia",
+      "footballAPIId": 818,
+      "APIFootballId": 8
+    },
+    {
+      "teamName": "Egypt",
+      "footballAPIId": 825,
+      "APIFootballId": 32
+    },
+    {
+      "teamName": "Canada",
+      "footballAPIId": 828,
+      "APIFootballId": 5529
+    },
+    {
+      "teamName": "Haiti",
+      "footballAPIId": 836,
+      "APIFootballId": 2386
+    },
+    {
+      "teamName": "Iran",
+      "footballAPIId": 840,
+      "APIFootballId": 22
+    },
+    {
+      "teamName": "Bosnia-Herzegovina",
+      "footballAPIId": 1060,
+      "APIFootballId": 1113
+    },
+    {
+      "teamName": "Panama",
+      "footballAPIId": 1836,
+      "APIFootballId": 11
+    },
+    {
+      "teamName": "Cape Verde Islands",
+      "footballAPIId": 1930,
+      "APIFootballId": 1533
+    },
+    {
+      "teamName": "Congo DR",
+      "footballAPIId": 1934,
+      "APIFootballId": 1508
+    },
+    {
+      "teamName": "Ivory Coast",
+      "footballAPIId": 1935,
+      "APIFootballId": 1501
+    },
+    {
+      "teamName": "Qatar",
+      "footballAPIId": 8030,
+      "APIFootballId": 1569
+    },
+    {
+      "teamName": "Jordan",
+      "footballAPIId": 8049,
+      "APIFootballId": 1548
+    },
+    {
+      "teamName": "Iraq",
+      "footballAPIId": 8062,
+      "APIFootballId": 1567
+    },
+    {
+      "teamName": "Uzbekistan",
+      "footballAPIId": 8070,
+      "APIFootballId": 1568
+    },
+    {
+      "teamName": "Netherlands",
+      "footballAPIId": 8601,
+      "APIFootballId": 1118
+    },
+    {
+      "teamName": "Norway",
+      "footballAPIId": 8872,
+      "APIFootballId": 1090
+    },
+    {
+      "teamName": "Scotland",
+      "footballAPIId": 8873,
+      "APIFootballId": 1108
+    },
+    {
+      "teamName": "Curaçao",
+      "footballAPIId": 9460,
+      "APIFootballId": 5530
+    }
+  ]
+}
