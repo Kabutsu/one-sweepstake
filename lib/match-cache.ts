@@ -2,12 +2,22 @@ import { db } from "@/db";
 import { matchCache, tournaments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getFootballDataAPI } from "./football-data-api";
+import {
+  getAPIFootballClient,
+  mapAPIFootballStatus,
+  loadTeamMappings,
+  type APIFootballMatch,
+} from "./api-football";
 
 export interface UpdateMatchCacheResult {
   updated: number;
   created: number;
   deleted: number;
   errors: string[];
+  footballDataSuccess: boolean;
+  apiFootballSuccess: boolean;
+  liveMatchesUpdated: number;
+  finishedMatchesBackfilled: number;
 }
 
 export async function cleanupOldMatches(tournamentId: string): Promise<number> {
@@ -38,6 +48,10 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
     created: 0,
     deleted: 0,
     errors: [],
+    footballDataSuccess: false,
+    apiFootballSuccess: false,
+    liveMatchesUpdated: 0,
+    finishedMatchesBackfilled: 0,
   };
 
   try {
@@ -55,8 +69,20 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
     // Clean up old matches first
     result.deleted = await cleanupOldMatches(tournament.id);
 
+    // Phase 1: Fetch schedule from football-data.org
     const footballDataAPI = getFootballDataAPI();
-    const matches = await footballDataAPI.fetchMatchesByCompetition(tournamentApiId);
+    let matches: Awaited<ReturnType<typeof footballDataAPI.fetchMatchesByCompetition>> = [];
+    try {
+      matches = await footballDataAPI.fetchMatchesByCompetition(tournamentApiId);
+      result.footballDataSuccess = true;
+    } catch (error) {
+      result.errors.push(
+        `Football-data.org API failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+      result.footballDataSuccess = false;
+      // Continue to try API-Football for live matches
+      matches = [];
+    }
 
     for (const match of matches) {
       try {
@@ -99,6 +125,82 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
         );
       }
     }
+    // Phase 2: Update live matches from API-Football
+    try {
+      const apiFootballClient = getAPIFootballClient();
+      const liveMatches = await apiFootballClient.fetchLiveMatches(1); // World Cup league ID
+      result.apiFootballSuccess = true;
+
+      if (liveMatches.length > 0) {
+        const teamMapping = loadTeamMappings();
+        result.liveMatchesUpdated = await updateLiveMatches(
+          tournament.id,
+          liveMatches,
+          teamMapping
+        );
+      }
+    } catch (error) {
+      result.errors.push(
+        `API-Football live matches failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+      result.apiFootballSuccess = false;
+      // Not a critical failure - we still have football-data.org data
+    }
+
+    // Phase 3: Backfill finished matches with null scores from API-Football
+    try {
+      const apiFootballClient = getAPIFootballClient();
+      const teamMapping = loadTeamMappings();
+
+      // Find finished matches with null scores
+      const finishedMatchesWithNullScores = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, tournament.id));
+
+      const matchesToBackfill = finishedMatchesWithNullScores.filter(
+        (m) => m.status === "FINISHED" && (m.homeScore === null || m.awayScore === null)
+      );
+
+      if (matchesToBackfill.length > 0) {
+        // Get unique dates to fetch
+        const datesToFetch = new Set<string>();
+        for (const match of matchesToBackfill) {
+          const dateStr = match.scheduledAt.toISOString().split("T")[0]; // YYYY-MM-DD
+          datesToFetch.add(dateStr);
+        }
+
+        console.log(
+          `Backfilling ${matchesToBackfill.length} finished matches from ${datesToFetch.size} dates`
+        );
+
+        // Fetch matches for each date
+        for (const date of datesToFetch) {
+          try {
+            const matchesOnDate = await apiFootballClient.fetchMatchesByDate(date);
+            // Filter to only World Cup matches
+            const worldCupMatches = matchesOnDate.filter((m) => m.league.id === 1);
+
+            if (worldCupMatches.length > 0) {
+              result.finishedMatchesBackfilled += await updateLiveMatches(
+                tournament.id,
+                worldCupMatches,
+                teamMapping
+              );
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to backfill matches for date ${date}: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      result.errors.push(
+        `API-Football backfill failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+      // Not a critical failure
+    }
   } catch (error) {
     result.errors.push(
       `Failed to update match cache: ${error instanceof Error ? error.message : String(error)}`
@@ -106,6 +208,98 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
   }
 
   return result;
+}
+
+/**
+ * Update matches with live data from API-Football
+ */
+async function updateLiveMatches(
+  tournamentId: string,
+  liveMatches: APIFootballMatch[],
+  teamMapping: Map<number, string>
+): Promise<number> {
+  let updatedCount = 0;
+
+  for (const match of liveMatches) {
+    try {
+      // Map API-Football team IDs to football-data.org team IDs
+      const homeTeamId = teamMapping.get(match.teams.home.id);
+      const awayTeamId = teamMapping.get(match.teams.away.id);
+
+      if (!homeTeamId || !awayTeamId) {
+        console.warn(
+          `Skipping match ${match.fixture.id}: Team mapping not found (home: ${match.teams.home.id}, away: ${match.teams.away.id})`
+        );
+        continue;
+      }
+
+      // Find existing match by team IDs and approximate date
+      // (API-Football doesn't give us football-data match IDs)
+      const matchDate = new Date(match.fixture.date);
+      const existingMatches = await db
+        .select()
+        .from(matchCache)
+        .where(eq(matchCache.tournamentId, tournamentId));
+
+      const existingMatch = existingMatches.find(
+        (m) =>
+          m.homeTeamId === homeTeamId &&
+          m.awayTeamId === awayTeamId &&
+          Math.abs(new Date(m.scheduledAt).getTime() - matchDate.getTime()) < 24 * 60 * 60 * 1000 // Within 24 hours
+      );
+
+      if (!existingMatch) {
+        console.warn(
+          `No existing match found for ${match.teams.home.name} vs ${match.teams.away.name} at ${matchDate}`
+        );
+        continue;
+      }
+
+      // Determine current score (use fulltime if finished, otherwise use current goals)
+      let homeScore = match.goals.home;
+      let awayScore = match.goals.away;
+
+      // For finished matches, prefer fulltime/extratime scores
+      if (match.fixture.status.short === "FT" || match.fixture.status.short === "AET") {
+        homeScore = match.score.fulltime.home ?? match.goals.home;
+        awayScore = match.score.fulltime.away ?? match.goals.away;
+      } else if (match.fixture.status.short === "PEN") {
+        // For penalty shootouts, use fulltime (which includes extra time)
+        homeScore = match.score.fulltime.home ?? match.goals.home;
+        awayScore = match.score.fulltime.away ?? match.goals.away;
+      }
+
+      // Merge API-Football data with existing rawData
+      const mergedRawData = {
+        ...(typeof existingMatch.rawData === "object" && existingMatch.rawData !== null
+          ? existingMatch.rawData
+          : {}),
+        apiFootball: match, // Store complete API-Football response
+      };
+
+      await db
+        .update(matchCache)
+        .set({
+          homeScore,
+          awayScore,
+          status: mapAPIFootballStatus(match.fixture.status.short),
+          stage: match.league.round ?? existingMatch.stage,
+          rawData: mergedRawData,
+          lastFetchedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(matchCache.id, existingMatch.id));
+
+      updatedCount++;
+    } catch (error) {
+      console.error(
+        `Failed to update live match ${match.fixture.id}:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  return updatedCount;
 }
 
 export async function shouldPollMatches(tournamentId: string): Promise<boolean> {
