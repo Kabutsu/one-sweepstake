@@ -11,6 +11,9 @@ export interface LeaderboardParticipant {
     teamLogo: string | null;
     teamRanking: number | null;
     isEliminated: boolean;
+    points?: number;
+    goalDifference?: number;
+    goalsFor?: number;
   }>;
   teamsRemaining: number;
   teamsEliminated: number;

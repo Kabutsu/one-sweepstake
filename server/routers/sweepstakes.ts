@@ -14,7 +14,7 @@ import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw, executeUnbalancedDraw } from "@/utils/draw-algorithm";
 import { getTournamentSeeding } from "@/scripts/seed-tournament";
-import { getEliminationStatus, Match } from "@/lib/elimination-tracker";
+import { getEliminationStatus, Match, calculateGroupStandings } from "@/lib/elimination-tracker";
 import {
   calculateLeaderboard,
   getAllGroupStandings,
@@ -537,6 +537,23 @@ export const sweepstakesRouter = router({
 
       const eliminationStatus = getEliminationStatus(matches);
 
+      // Calculate group standings to get team performance stats
+      const groupStandings = calculateGroupStandings(matches);
+      const teamPerformanceMap = new Map<
+        string,
+        { points: number; goalDifference: number; goalsFor: number }
+      >();
+
+      for (const [_, standings] of groupStandings) {
+        for (const standing of standings) {
+          teamPerformanceMap.set(standing.teamId, {
+            points: standing.points,
+            goalDifference: standing.goalDifference,
+            goalsFor: standing.goalsFor,
+          });
+        }
+      }
+
       // Get all team assignments
       const assignments = await db
         .select({
@@ -574,12 +591,16 @@ export const sweepstakesRouter = router({
               teams: [],
             };
           }
+          const performance = teamPerformanceMap.get(assignment.teamId);
           acc[assignment.participantId].teams.push({
             teamId: assignment.teamId,
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
             teamRanking: assignment.teamRaking,
             isEliminated: eliminationStatus.get(assignment.teamId) || false,
+            points: performance?.points ?? 0,
+            goalDifference: performance?.goalDifference ?? 0,
+            goalsFor: performance?.goalsFor ?? 0,
           });
           return acc;
         },

@@ -12,7 +12,8 @@ import DrawTeamsButton from "./components/DrawTeamsButton";
 import GroupStandingsTable from "./components/GroupStandingsTable";
 
 function sortTeamsByPerformance(
-  teams: LeaderboardParticipant["teams"]
+  teams: LeaderboardParticipant["teams"],
+  tournamentActive: boolean
 ): LeaderboardParticipant["teams"] {
   return teams.slice().sort((a, b) => {
     // Sort by:
@@ -21,12 +22,33 @@ function sortTeamsByPerformance(
       return a.isEliminated ? 1 : -1;
     }
 
-    // 2. Return ranking order
-    if (a.teamRanking != null && b.teamRanking != null && a.teamRanking !== b.teamRanking) {
-      return a.teamRanking - b.teamRanking;
+    // 2. If tournament is active, sort by performance (points, goal difference, goals scored)
+    if (tournamentActive) {
+      const aPoints = a.points ?? 0;
+      const bPoints = b.points ?? 0;
+      if (aPoints !== bPoints) {
+        return bPoints - aPoints;
+      }
+
+      const aGD = a.goalDifference ?? 0;
+      const bGD = b.goalDifference ?? 0;
+      if (aGD !== bGD) {
+        return bGD - aGD;
+      }
+
+      const aGF = a.goalsFor ?? 0;
+      const bGF = b.goalsFor ?? 0;
+      if (aGF !== bGF) {
+        return bGF - aGF;
+      }
+    } else {
+      // 3. If tournament not active, sort by ranking
+      if (a.teamRanking != null && b.teamRanking != null && a.teamRanking !== b.teamRanking) {
+        return a.teamRanking - b.teamRanking;
+      }
     }
 
-    // 3. Alphabetical by team name
+    // 4. Alphabetical by team name
     return a.teamName.localeCompare(b.teamName);
   });
 }
@@ -55,24 +77,68 @@ export default function StandingsTab({
         select: (data) => {
           const stillIn = data.stillIn.map((p) => ({
             ...p,
-            teams: sortTeamsByPerformance(p.teams),
+            teams: sortTeamsByPerformance(p.teams, tournamentActive),
           }));
 
           const eliminated = data.eliminated.map((p) => ({
             ...p,
-            teams: sortTeamsByPerformance(p.teams),
+            teams: sortTeamsByPerformance(p.teams, tournamentActive),
           }));
 
-          // If tournament is active, no need to sort order
+          // If tournament is active, sort by teams remaining, then total performance
           if (tournamentActive) {
+            const stillInRanked = [...stillIn].sort(
+              (a: LeaderboardParticipant, b: LeaderboardParticipant) => {
+                // Sort by:
+                // 1. Teams remaining (descending)
+                if (a.teamsRemaining !== b.teamsRemaining) {
+                  return b.teamsRemaining - a.teamsRemaining;
+                }
+
+                // 2. Total performance of non-eliminated teams
+                const aTotalPoints = a.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.points ?? 0), 0);
+                const bTotalPoints = b.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.points ?? 0), 0);
+                if (aTotalPoints !== bTotalPoints) {
+                  return bTotalPoints - aTotalPoints;
+                }
+
+                const aTotalGD = a.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.goalDifference ?? 0), 0);
+                const bTotalGD = b.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.goalDifference ?? 0), 0);
+                if (aTotalGD !== bTotalGD) {
+                  return bTotalGD - aTotalGD;
+                }
+
+                const aTotalGF = a.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.goalsFor ?? 0), 0);
+                const bTotalGF = b.teams
+                  .filter((t) => !t.isEliminated)
+                  .reduce((sum, t) => sum + (t.goalsFor ?? 0), 0);
+                if (aTotalGF !== bTotalGF) {
+                  return bTotalGF - aTotalGF;
+                }
+
+                // 3. Alphabetical by display name
+                return (a.displayName || "").localeCompare(b.displayName || "");
+              }
+            );
+
             return {
               ...data,
-              stillIn,
+              stillIn: stillInRanked,
               eliminated,
             };
           }
 
-          // If tournament inactive, rank assignements with current user first, then by number of teams, then alphabetically
+          // If tournament inactive, rank assignments with current user first, then by number of teams, then alphabetically
           const stillInRanked = [...stillIn].sort(
             (a: LeaderboardParticipant, b: LeaderboardParticipant) => {
               // Sort by:
