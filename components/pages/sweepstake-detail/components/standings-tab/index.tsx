@@ -41,11 +41,10 @@ function sortTeamsByPerformance(
       if (aGF !== bGF) {
         return bGF - aGF;
       }
-    } else {
-      // 3. If tournament not active, sort by ranking
-      if (a.teamRanking != null && b.teamRanking != null && a.teamRanking !== b.teamRanking) {
-        return a.teamRanking - b.teamRanking;
-      }
+    }
+
+    if (a.teamRanking != null && b.teamRanking != null && a.teamRanking !== b.teamRanking) {
+      return a.teamRanking - b.teamRanking;
     }
 
     // 4. Alphabetical by team name
