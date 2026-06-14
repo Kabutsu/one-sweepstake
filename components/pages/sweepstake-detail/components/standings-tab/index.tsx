@@ -131,6 +131,11 @@ export default function StandingsTab({
               }
             );
 
+            // Reassign ranks based on new sorting order
+            stillInRanked.forEach((p, index) => {
+              p.rank = index + 1;
+            });
+
             return {
               ...data,
               stillIn: stillInRanked,
