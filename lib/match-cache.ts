@@ -12,46 +12,22 @@ import {
 export interface UpdateMatchCacheResult {
   updated: number;
   created: number;
-  deleted: number;
   errors: string[];
-  footballDataSuccess: boolean;
-  apiFootballSuccess: boolean;
-  liveMatchesUpdated: number;
-  finishedMatchesBackfilled: number;
+  success: boolean;
 }
 
-export async function cleanupOldMatches(tournamentId: string): Promise<number> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 30); // 30 days ago
-
-  const oldMatches = await db
-    .select()
-    .from(matchCache)
-    .where(eq(matchCache.tournamentId, tournamentId));
-
-  const matchesToDelete = oldMatches.filter(
-    (match) => new Date(match.scheduledAt) < cutoffDate && match.status === "FINISHED"
-  );
-
-  if (matchesToDelete.length > 0) {
-    for (const match of matchesToDelete) {
-      await db.delete(matchCache).where(eq(matchCache.id, match.id));
-    }
-  }
-
-  return matchesToDelete.length;
-}
-
-export async function updateMatchCache(tournamentApiId: string): Promise<UpdateMatchCacheResult> {
+/**
+ * Fetch and add new matches from football-data.org to the cache.
+ * Only creates new matches, does not update existing ones.
+ */
+export async function updateMatchSchedule(
+  tournamentApiId: string
+): Promise<UpdateMatchCacheResult> {
   const result: UpdateMatchCacheResult = {
     updated: 0,
     created: 0,
-    deleted: 0,
     errors: [],
-    footballDataSuccess: false,
-    apiFootballSuccess: false,
-    liveMatchesUpdated: 0,
-    finishedMatchesBackfilled: 0,
+    success: false,
   };
 
   try {
@@ -66,23 +42,9 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
       return result;
     }
 
-    // Clean up old matches first
-    result.deleted = await cleanupOldMatches(tournament.id);
-
-    // Phase 1: Fetch schedule from football-data.org
     const footballDataAPI = getFootballDataAPI();
-    let matches: Awaited<ReturnType<typeof footballDataAPI.fetchMatchesByCompetition>> = [];
-    try {
-      matches = await footballDataAPI.fetchMatchesByCompetition(tournamentApiId);
-      result.footballDataSuccess = true;
-    } catch (error) {
-      result.errors.push(
-        `Football-data.org API failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-      result.footballDataSuccess = false;
-      // Continue to try API-Football for live matches
-      matches = [];
-    }
+    const matches = await footballDataAPI.fetchMatchesByCompetition(tournamentApiId);
+    result.success = true;
 
     for (const match of matches) {
       try {
@@ -91,123 +53,153 @@ export async function updateMatchCache(tournamentApiId: string): Promise<UpdateM
           continue;
         }
 
+        // Check if match already exists
         const existingMatch = await db
           .select()
           .from(matchCache)
           .where(eq(matchCache.apiMatchId, String(match.id)))
           .limit(1);
 
-        const matchData = {
-          tournamentId: tournament.id,
-          apiMatchId: String(match.id),
-          homeTeamId: String(match.homeTeam.id),
-          awayTeamId: String(match.awayTeam.id),
-          homeScore: match.score.fullTime.home,
-          awayScore: match.score.fullTime.away,
-          status: match.status,
-          stage: match.stage ?? null,
-          scheduledAt: new Date(match.utcDate),
-          rawData: match,
-          lastFetchedAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        if (existingMatch.length > 0) {
-          await db.update(matchCache).set(matchData).where(eq(matchCache.id, existingMatch[0].id));
-          result.updated++;
-        } else {
-          await db.insert(matchCache).values(matchData);
+        // Only add new matches, don't update existing ones
+        if (existingMatch.length === 0) {
+          await db.insert(matchCache).values({
+            tournamentId: tournament.id,
+            apiMatchId: String(match.id),
+            homeTeamId: String(match.homeTeam.id),
+            awayTeamId: String(match.awayTeam.id),
+            homeScore: match.score.fullTime.home,
+            awayScore: match.score.fullTime.away,
+            status: match.status,
+            stage: match.stage ?? null,
+            scheduledAt: new Date(match.utcDate),
+            rawData: match,
+            lastFetchedAt: new Date(),
+            updatedAt: new Date(),
+          });
           result.created++;
         }
       } catch (error) {
         result.errors.push(
-          `Failed to cache match ${match.id}: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to add match ${match.id}: ${error instanceof Error ? error.message : String(error)}`
         );
       }
-    }
-    // Phase 2: Update live matches from API-Football
-    try {
-      const apiFootballClient = getAPIFootballClient();
-      const liveMatches = await apiFootballClient.fetchLiveMatches(1); // World Cup league ID
-      result.apiFootballSuccess = true;
-
-      if (liveMatches.length > 0) {
-        const teamMapping = loadTeamMappings();
-        result.liveMatchesUpdated = await updateLiveMatches(
-          tournament.id,
-          liveMatches,
-          teamMapping
-        );
-      }
-    } catch (error) {
-      result.errors.push(
-        `API-Football live matches failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-      result.apiFootballSuccess = false;
-      // Not a critical failure - we still have football-data.org data
-    }
-
-    // Phase 3: Backfill finished matches with null scores from API-Football
-    try {
-      const apiFootballClient = getAPIFootballClient();
-      const teamMapping = loadTeamMappings();
-
-      // Find finished matches with null scores
-      const finishedMatchesWithNullScores = await db
-        .select()
-        .from(matchCache)
-        .where(eq(matchCache.tournamentId, tournament.id));
-
-      const matchesToBackfill = finishedMatchesWithNullScores.filter(
-        (m) => m.status === "FINISHED" && (m.homeScore === null || m.awayScore === null)
-      );
-
-      if (matchesToBackfill.length > 0) {
-        // Get unique dates to fetch
-        const datesToFetch = new Set<string>();
-        for (const match of matchesToBackfill) {
-          const dateStr = match.scheduledAt.toISOString().split("T")[0]; // YYYY-MM-DD
-          datesToFetch.add(dateStr);
-        }
-
-        console.log(
-          `Backfilling ${matchesToBackfill.length} finished matches from ${datesToFetch.size} dates`
-        );
-
-        // Fetch matches for each date
-        for (const date of datesToFetch) {
-          try {
-            const matchesOnDate = await apiFootballClient.fetchMatchesByDate(date);
-            // Filter to only World Cup matches
-            const worldCupMatches = matchesOnDate.filter((m) => m.league.id === 1);
-
-            if (worldCupMatches.length > 0) {
-              result.finishedMatchesBackfilled += await updateLiveMatches(
-                tournament.id,
-                worldCupMatches,
-                teamMapping
-              );
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to backfill matches for date ${date}: ${error instanceof Error ? error.message : String(error)}`
-            );
-          }
-        }
-      }
-    } catch (error) {
-      result.errors.push(
-        `API-Football backfill failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-      // Not a critical failure
     }
   } catch (error) {
     result.errors.push(
-      `Failed to update match cache: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update schedule: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 
   return result;
+}
+
+/**
+ * Update live match results from API-Football for matches that kicked off recently.
+ * Only updates scores for existing matches that are not yet finished.
+ */
+export async function updateMatchLiveResults(
+  tournamentId: string
+): Promise<UpdateMatchCacheResult> {
+  const result: UpdateMatchCacheResult = {
+    updated: 0,
+    created: 0,
+    errors: [],
+    success: false,
+  };
+
+  try {
+    const now = new Date();
+    const groupStageWindow = 2.5 * 60 * 60 * 1000; // 2.5 hours in ms
+    const knockoutWindow = 3.5 * 60 * 60 * 1000; // 3.5 hours in ms
+
+    // Find matches that need live updates
+    const allMatches = await db
+      .select()
+      .from(matchCache)
+      .where(eq(matchCache.tournamentId, tournamentId));
+
+    const matchesNeedingUpdate = allMatches.filter((match) => {
+      if (match.status === "FINISHED") return false;
+
+      const kickoffTime = new Date(match.scheduledAt).getTime();
+      const timeSinceKickoff = now.getTime() - kickoffTime;
+
+      const isGroupStage = match.stage === "GROUP_STAGE";
+      const knockoutStages = [
+        "FINAL",
+        "THIRD_PLACE",
+        "SEMI_FINALS",
+        "QUARTER_FINALS",
+        "LAST_16",
+        "LAST_32",
+      ];
+      const isKnockout = knockoutStages.includes(match.stage || "");
+
+      if (!isGroupStage && !isKnockout && match.stage) {
+        console.warn(`Unexpected stage: ${match.stage} for match ${match.id}`);
+      }
+
+      if (isGroupStage && timeSinceKickoff > 0 && timeSinceKickoff <= groupStageWindow) {
+        return true;
+      }
+
+      if (isKnockout && timeSinceKickoff > 0 && timeSinceKickoff <= knockoutWindow) {
+        return true;
+      }
+
+      return false;
+    });
+
+    // Early exit if no matches need updating
+    if (matchesNeedingUpdate.length === 0) {
+      result.success = true;
+      return result;
+    }
+
+    // Fetch live matches from API-Football
+    const apiFootballClient = getAPIFootballClient();
+    const liveMatches = await apiFootballClient.fetchLiveMatches(1); // World Cup league ID
+    result.success = true;
+
+    if (liveMatches.length > 0) {
+      const teamMapping = loadTeamMappings();
+      result.updated = await updateLiveMatches(tournamentId, liveMatches, teamMapping);
+    }
+  } catch (error) {
+    result.errors.push(
+      `Failed to update live results: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
+  return result;
+}
+
+/**
+ * @deprecated Use updateMatchSchedule() and updateMatchLiveResults() separately
+ * Legacy function that calls both schedule and live results updates
+ */
+export async function updateMatchCache(tournamentApiId: string): Promise<UpdateMatchCacheResult> {
+  const scheduleResult = await updateMatchSchedule(tournamentApiId);
+
+  // Get tournament ID from API ID
+  const [tournament] = await db
+    .select()
+    .from(tournaments)
+    .where(eq(tournaments.apiId, tournamentApiId))
+    .limit(1);
+
+  if (!tournament) {
+    return scheduleResult;
+  }
+
+  const liveResult = await updateMatchLiveResults(tournament.id);
+
+  return {
+    created: scheduleResult.created,
+    updated: liveResult.updated,
+    errors: [...scheduleResult.errors, ...liveResult.errors],
+    success: scheduleResult.success && liveResult.success,
+  };
 }
 
 /**
