@@ -115,6 +115,40 @@ export class FootballDataAPIClient {
       );
     }
   }
+
+  async fetchMatchesByDateRange(
+    competitionId: string,
+    dateFrom: string,
+    dateTo: string
+  ): Promise<FootballDataMatch[]> {
+    try {
+      const url = `${this.baseUrl}/competitions/${competitionId}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+      const response = await fetch(url, {
+        headers: {
+          "X-Auth-Token": this.apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new FootballDataAPIError(
+          `Failed to fetch matches by date range: ${response.statusText}`,
+          response.status,
+          errorBody
+        );
+      }
+
+      const data: FootballDataResponse = await response.json();
+      return data.matches;
+    } catch (error) {
+      if (error instanceof FootballDataAPIError) {
+        throw error;
+      }
+      throw new FootballDataAPIError(
+        `Network error while fetching matches by date range: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
 }
 
 let _footballDataAPI: FootballDataAPIClient | null = null;
