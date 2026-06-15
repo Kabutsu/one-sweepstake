@@ -33,9 +33,9 @@ async function populateMatchCache() {
         const result = await updateMatchCache(tournament.apiId);
         console.log(`   ✅ Created: ${result.created}`);
         console.log(`   🔄 Updated: ${result.updated}`);
-        if (result.deleted > 0) {
-          console.log(`   🗑️  Deleted: ${result.deleted} old matches`);
-        }
+        // if (result.deleted > 0) {
+        //   console.log(`   🗑️  Deleted: ${result.deleted} old matches`);
+        // }
 
         if (result.errors.length > 0) {
           console.log(`   ⚠️  Errors: ${result.errors.length}`);
