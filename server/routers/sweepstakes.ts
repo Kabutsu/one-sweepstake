@@ -14,7 +14,7 @@ import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw, executeUnbalancedDraw } from "@/utils/draw-algorithm";
 import { getTournamentSeeding } from "@/scripts/seed-tournament";
-import { Match, calculateGroupStandings } from "@/lib/elimination-tracker";
+import { Match, calculateGroupStandings, rankThirdPlaceTeams } from "@/lib/elimination-tracker";
 import {
   calculateLeaderboard,
   getAllGroupStandings,
@@ -621,10 +621,36 @@ export const sweepstakesRouter = router({
 
       const groupStandings = getAllGroupStandings(matches);
 
-      // Convert Map to object for JSON serialization
+      // Fetch pre-tournament rankings for third-place tiebreaking
+      const teamRankingRecords = await db
+        .select({ teamId: teamsTournaments.teamId, ranking: teamsTournaments.ranking })
+        .from(teamsTournaments)
+        .where(eq(teamsTournaments.tournamentId, input.tournamentId));
+
+      const teamRankings = new Map(
+        teamRankingRecords
+          .filter((r) => r.ranking != null)
+          .map((r) => [r.teamId, r.ranking as number])
+      );
+
+      // Compute cross-group third-place rankings for UI annotation
+      const thirdPlaceRankings = rankThirdPlaceTeams(groupStandings, teamRankings);
+      const thirdPlaceRankMap = new Map(thirdPlaceRankings.map((r) => [r.teamId, r]));
+
+      // Convert Map to object for JSON serialization, annotating 3rd-place standings
       const standingsObject: Record<string, any[]> = {};
       for (const [group, standings] of groupStandings) {
-        standingsObject[group] = standings;
+        standingsObject[group] = standings.map((standing, index) => {
+          if (index === 2) {
+            const tpRanking = thirdPlaceRankMap.get(standing.teamId);
+            return {
+              ...standing,
+              thirdPlaceRank: tpRanking?.rank,
+              advancesAsThirdPlace: tpRanking != null && tpRanking.rank <= 8,
+            };
+          }
+          return standing;
+        });
       }
 
       return standingsObject;

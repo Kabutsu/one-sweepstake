@@ -12,6 +12,8 @@ interface GroupStanding {
   goalDifference: number;
   points: number;
   group: string;
+  thirdPlaceRank?: number;
+  advancesAsThirdPlace?: boolean;
 }
 
 interface GroupStandingsTableProps {
@@ -99,7 +101,7 @@ export default function GroupStandingsTable({ standings }: GroupStandingsTablePr
                       {groupStandings.map((team, index) => {
                         const position = index + 1;
                         const isQualified = position <= 2;
-                        const isThirdPlace = position === 3;
+                        const isThirdPlace = position === 3 && team.advancesAsThirdPlace === true;
 
                         return (
                           <tr

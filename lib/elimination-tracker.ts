@@ -34,6 +34,8 @@ export interface GroupStanding {
   points: number;
   group: string;
   tournamentRanking?: number;
+  thirdPlaceRank?: number;
+  advancesAsThirdPlace?: boolean;
 }
 
 export interface ThirdPlaceRanking {
@@ -43,6 +45,7 @@ export interface ThirdPlaceRanking {
   points: number;
   goalDifference: number;
   goalsFor: number;
+  teamRanking?: number;
   rank: number;
 }
 
@@ -383,7 +386,8 @@ function resolveHeadToHeadTiebreaker(
  * Rank third-place teams across all groups
  */
 export function rankThirdPlaceTeams(
-  groupStandings: Map<string, GroupStanding[]>
+  groupStandings: Map<string, GroupStanding[]>,
+  teamRankings?: Map<string, number>
 ): ThirdPlaceRanking[] {
   const thirdPlaceTeams: ThirdPlaceRanking[] = [];
 
@@ -397,6 +401,7 @@ export function rankThirdPlaceTeams(
         points: thirdPlace.points,
         goalDifference: thirdPlace.goalDifference,
         goalsFor: thirdPlace.goalsFor,
+        teamRanking: teamRankings?.get(thirdPlace.teamId),
         rank: 0, // Will be assigned after sorting
       });
     }
@@ -410,7 +415,11 @@ export function rankThirdPlaceTeams(
     if (a.goalDifference !== b.goalDifference) return b.goalDifference - a.goalDifference;
     // 3. Goals scored
     if (a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
-    // 4. Alphabetical
+    // 4. Pre-tournament ranking (lower number = better)
+    if (a.teamRanking != null && b.teamRanking != null && a.teamRanking !== b.teamRanking) {
+      return a.teamRanking - b.teamRanking;
+    }
+    // 5. Alphabetical
     return a.teamName.localeCompare(b.teamName);
   });
 
@@ -816,7 +825,7 @@ export function calculateEliminationWithRankings(
     sortedStandings.set(group, sorted);
   }
 
-  const thirdPlaceRankings = rankThirdPlaceTeams(sortedStandings);
+  const thirdPlaceRankings = rankThirdPlaceTeams(sortedStandings, teamRankings);
 
   // Calculate elimination for all teams
   const eliminationMap = new Map<string, boolean>();
