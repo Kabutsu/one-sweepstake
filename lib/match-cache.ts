@@ -1,7 +1,8 @@
 import { db } from "@/db";
-import { matchCache, tournaments } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { matchCache, tournaments, teams, teamsTournaments } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { getFootballDataAPI } from "./football-data-api";
+import { calculateEliminationWithRankings, Match } from "./elimination-tracker";
 
 export interface UpdateMatchCacheResult {
   updated: number;
@@ -209,6 +210,17 @@ export async function updateMatchLiveResults(
       }
     }
 
+    // After updating matches, recalculate elimination status if any matches were updated
+    if (result.updated > 0) {
+      try {
+        await updateEliminationStatus(tournamentId);
+      } catch (error) {
+        result.errors.push(
+          `Failed to update elimination status: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+
     result.success = true;
   } catch (error) {
     result.errors.push(
@@ -347,4 +359,64 @@ export async function getPollingRecommendation(
     reason: "Tournament in progress: frequent polling for live scores",
     tournamentPhase: "active",
   };
+}
+
+/**
+ * Update elimination status for all teams in a tournament
+ * Called after match results are updated
+ */
+async function updateEliminationStatus(tournamentId: string): Promise<void> {
+  // Get all matches for the tournament
+  const matchRecords = await db
+    .select()
+    .from(matchCache)
+    .where(eq(matchCache.tournamentId, tournamentId));
+
+  // Get all teams with their rankings
+  const teamRecords = await db
+    .select({
+      teamId: teamsTournaments.teamId,
+      ranking: teamsTournaments.ranking,
+    })
+    .from(teamsTournaments)
+    .where(eq(teamsTournaments.tournamentId, tournamentId));
+
+  // Build rankings map
+  const teamRankings = new Map<string, number>();
+  for (const team of teamRecords) {
+    if (team.ranking) {
+      teamRankings.set(team.teamId, team.ranking);
+    }
+  }
+
+  // Get team names for enrichment
+  const allTeams = await db.select().from(teams);
+  const teamsMap = new Map(allTeams.map((t) => [t.id, t]));
+
+  // Enrich matches with team names
+  const enrichedMatches: Match[] = matchRecords.map((match) => ({
+    apiMatchId: match.apiMatchId,
+    homeTeamId: match.homeTeamId,
+    homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
+    awayTeamId: match.awayTeamId,
+    awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
+    homeScore: match.homeScore,
+    awayScore: match.awayScore,
+    status: match.status,
+    stage: match.stage,
+    rawData: match.rawData,
+  }));
+
+  // Calculate elimination status
+  const eliminationStatus = calculateEliminationWithRankings(enrichedMatches, teamRankings);
+
+  // Update database
+  for (const [teamId, isEliminated] of eliminationStatus) {
+    await db
+      .update(teamsTournaments)
+      .set({ isEliminated })
+      .where(
+        and(eq(teamsTournaments.teamId, teamId), eq(teamsTournaments.tournamentId, tournamentId))
+      );
+  }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "teams_tournaments" ADD COLUMN "is_eliminated" boolean DEFAULT false NOT NULL;

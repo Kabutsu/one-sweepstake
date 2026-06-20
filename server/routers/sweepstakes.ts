@@ -14,7 +14,7 @@ import { eq, and, lte, gte, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { executeTeamDraw, executeUnbalancedDraw } from "@/utils/draw-algorithm";
 import { getTournamentSeeding } from "@/scripts/seed-tournament";
-import { getEliminationStatus, Match, calculateGroupStandings } from "@/lib/elimination-tracker";
+import { Match, calculateGroupStandings } from "@/lib/elimination-tracker";
 import {
   calculateLeaderboard,
   getAllGroupStandings,
@@ -419,27 +419,7 @@ export const sweepstakesRouter = router({
         throw new Error("Sweepstake not found");
       }
 
-      // Get all matches for the tournament to calculate elimination status
-      const matchRecords = await db
-        .select()
-        .from(matchCache)
-        .where(eq(matchCache.tournamentId, sweepstake.tournamentId));
-
-      // Get all teams to enrich match data
-      const teamRecords = await db.select().from(teams);
-      const teamsMap = new Map(teamRecords.map((t) => [t.id, t]));
-
-      // Enrich matches with team names
-      const matches = matchRecords.map((match) => ({
-        ...match,
-        homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
-        awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
-      })) as Match[];
-
-      // Calculate elimination status for all teams
-      const eliminationStatus = getEliminationStatus(matches as Match[]);
-
-      // Get all team assignments for this sweepstake
+      // Get all team assignments for this sweepstake with elimination status
       const assignments = await db
         .select({
           id: teamAssignments.id,
@@ -451,12 +431,19 @@ export const sweepstakesRouter = router({
           userId: participants.userId,
           displayName: users.displayName,
           avatarUrl: users.avatarUrl,
+          isEliminated: teamsTournaments.isEliminated,
         })
         .from(teamAssignments)
         .innerJoin(participants, eq(teamAssignments.participantId, participants.id))
         .innerJoin(users, eq(participants.userId, users.id))
         .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
-        .where(eq(participants.sweepstakeId, input.sweepstakeId));
+        .innerJoin(teamsTournaments, eq(teams.id, teamsTournaments.teamId))
+        .where(
+          and(
+            eq(participants.sweepstakeId, input.sweepstakeId),
+            eq(teamsTournaments.tournamentId, sweepstake.tournamentId)
+          )
+        );
 
       // Group by participant and include elimination status
       const grouped = assignments.reduce(
@@ -476,7 +463,7 @@ export const sweepstakesRouter = router({
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
             assignedAt: assignment.assignedAt,
-            isEliminated: eliminationStatus.get(assignment.teamId) || false,
+            isEliminated: assignment.isEliminated,
           });
           return acc;
         },
@@ -518,7 +505,7 @@ export const sweepstakesRouter = router({
         throw new Error("Sweepstake not found");
       }
 
-      // Get all matches for elimination calculation
+      // Get all matches for group standings calculation
       const matchRecords = await db
         .select()
         .from(matchCache)
@@ -534,8 +521,6 @@ export const sweepstakesRouter = router({
         homeTeamName: teamsMap.get(match.homeTeamId)?.name || match.homeTeamId,
         awayTeamName: teamsMap.get(match.awayTeamId)?.name || match.awayTeamId,
       })) as Match[];
-
-      const eliminationStatus = getEliminationStatus(matches);
 
       // Calculate group standings to get team performance stats
       const groupStandings = calculateGroupStandings(matches);
@@ -554,7 +539,7 @@ export const sweepstakesRouter = router({
         }
       }
 
-      // Get all team assignments
+      // Get all team assignments with elimination status from database
       const assignments = await db
         .select({
           id: teamAssignments.id,
@@ -563,6 +548,7 @@ export const sweepstakesRouter = router({
           teamName: teams.name,
           teamLogo: teams.crest,
           teamRaking: teamsTournaments.ranking,
+          isEliminated: teamsTournaments.isEliminated,
           userId: participants.userId,
           displayName: users.displayName,
           avatarUrl: users.avatarUrl,
@@ -597,7 +583,7 @@ export const sweepstakesRouter = router({
             teamName: assignment.teamName,
             teamLogo: assignment.teamLogo,
             teamRanking: assignment.teamRaking,
-            isEliminated: eliminationStatus.get(assignment.teamId) || false,
+            isEliminated: assignment.isEliminated,
             points: performance?.points ?? 0,
             goalDifference: performance?.goalDifference ?? 0,
             goalsFor: performance?.goalsFor ?? 0,
@@ -698,24 +684,25 @@ export const sweepstakesRouter = router({
         })) as Match[];
       }
 
-      const eliminationStatus = getEliminationStatus(allMatches);
-
+      // Get team assignments with elimination status from database
       const assignments = await db
         .select({
           teamId: teamAssignments.teamId,
           teamName: teams.name,
           teamLogo: teams.crest,
+          isEliminated: teamsTournaments.isEliminated,
         })
         .from(teamAssignments)
         .innerJoin(teams, eq(teamAssignments.teamId, teams.id))
-        .where(eq(teamAssignments.participantId, sweepstake.participantId));
+        .innerJoin(teamsTournaments, eq(teams.id, teamsTournaments.teamId))
+        .where(
+          and(
+            eq(teamAssignments.participantId, sweepstake.participantId),
+            eq(teamsTournaments.tournamentId, sweepstake.tournamentId)
+          )
+        );
 
-      const teamsWithStatus = assignments.map((a) => ({
-        ...a,
-        isEliminated: eliminationStatus.get(a.teamId) || false,
-      }));
-
-      allUserTeams = [...allUserTeams, ...teamsWithStatus];
+      allUserTeams = [...allUserTeams, ...assignments];
     }
 
     // Remove duplicates

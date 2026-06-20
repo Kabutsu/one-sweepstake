@@ -60,6 +60,7 @@ export const teamsTournaments = pgTable(
       .notNull()
       .references(() => tournaments.id, { onDelete: "cascade" }),
     ranking: integer("ranking"),
+    isEliminated: boolean("is_eliminated").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
