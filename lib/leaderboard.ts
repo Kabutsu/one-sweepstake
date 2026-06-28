@@ -174,7 +174,7 @@ export function getTeamStandings(
 
   // Find next matches for teams
   const upcomingMatches = matches.filter(
-    (m) => (m.status === "SCHEDULED" || m.status === "TIMED") && m.stage?.includes("GROUP")
+    (m) => (m.status === "SCHEDULED" || m.status === "TIMED")
   );
 
   for (const match of upcomingMatches) {

@@ -1,7 +1,6 @@
 import Image from "next/image";
 
 import { trpc } from "@/lib/trpc";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function DashboardStandingsSummary() {
   const { data: summary, isLoading } = trpc.sweepstakes.getDashboardSummary.useQuery();
@@ -97,26 +96,16 @@ export default function DashboardStandingsSummary() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{team.points}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">pts</p>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
-                  <span>
-                    {team.won}W {team.drawn}D {team.lost}L
-                  </span>
-                  <span
-                    className={
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{team.won}W {team.drawn}D {team.lost}L</p>
+                    <p className={`text-sm font-bold text-gray-900 dark:text-white ${
                       team.goalDifference >= 0
                         ? "text-green-600 dark:text-green-400"
                         : "text-red-600 dark:text-red-400"
-                    }
-                  >
-                    {team.goalDifference > 0 ? "+" : ""}
-                    {team.goalDifference} GD
-                  </span>
+                    }`}>
+                      {team.goalDifference > 0 ? "+" : ""}
+                      {team.goalDifference} GD
+                    </p>
+                  </div>
                 </div>
 
                 {/* Next Match */}
