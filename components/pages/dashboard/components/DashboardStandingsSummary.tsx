@@ -96,12 +96,16 @@ export default function DashboardStandingsSummary() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{team.won}W {team.drawn}D {team.lost}L</p>
-                    <p className={`text-sm font-bold text-gray-900 dark:text-white ${
-                      team.goalDifference >= 0
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {team.won}W {team.drawn}D {team.lost}L
+                    </p>
+                    <p
+                      className={`text-sm font-bold text-gray-900 dark:text-white ${
+                        team.goalDifference >= 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
                       {team.goalDifference > 0 ? "+" : ""}
                       {team.goalDifference} GD
                     </p>
