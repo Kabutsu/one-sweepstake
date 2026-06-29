@@ -37,7 +37,7 @@ export default function SweepstakeDetail() {
 
   useEffect(() => {
     if (sweepstake) {
-      handleTabChange(sweepstake.drawCompletedAt ? "standings" : "overview");
+      setActiveTab(sweepstake.drawCompletedAt ? "standings" : "overview");
     }
   }, [sweepstake?.drawCompletedAt]);
 
