@@ -190,8 +190,14 @@ export async function updateMatchLiveResults(
           const isExtraTime = match.score.regularTime && match.score.extraTime;
 
           if (isExtraTime) {
-            homeScore = (match.score.regularTime!.home || 0) + (match.score.extraTime!.home || 0);
-            awayScore = (match.score.regularTime!.away || 0) + (match.score.extraTime!.away || 0);
+            homeScore =
+              (match.score.fullTime.home || 0) +
+              (match.score.regularTime!.home || 0) +
+              (match.score.extraTime!.home || 0);
+            awayScore =
+              (match.score.fullTime.away || 0) +
+              (match.score.regularTime!.away || 0) +
+              (match.score.extraTime!.away || 0);
           }
         }
 
