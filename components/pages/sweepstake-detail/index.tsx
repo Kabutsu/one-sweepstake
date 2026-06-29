@@ -36,10 +36,10 @@ export default function SweepstakeDetail() {
   };
 
   useEffect(() => {
-    if (sweepstake) {
+    if (!isLoading && sweepstake) {
       setActiveTab(sweepstake.drawCompletedAt ? "standings" : "overview");
     }
-  }, [sweepstake?.drawCompletedAt]);
+  }, [isLoading]);
 
   if (isLoading) {
     return (
