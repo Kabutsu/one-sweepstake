@@ -187,17 +187,11 @@ export async function updateMatchLiveResults(
         let awayScore = match.score.fullTime.away;
 
         if (knockoutStages.includes(match.stage || "")) {
-          const isExtraTime = match.score.regularTime && match.score.extraTime;
+          const hasPenalties = match.score.penalties != null;
 
-          if (isExtraTime) {
-            homeScore =
-              (match.score.fullTime.home || 0) +
-              (match.score.regularTime!.home || 0) +
-              (match.score.extraTime!.home || 0);
-            awayScore =
-              (match.score.fullTime.away || 0) +
-              (match.score.regularTime!.away || 0) +
-              (match.score.extraTime!.away || 0);
+          if (hasPenalties) {
+            homeScore = (match.score.fullTime.home || 0) - (match.score.penalties!.home || 0);
+            awayScore = (match.score.fullTime.away || 0) - (match.score.penalties!.away || 0);
           }
         }
 
