@@ -1,3 +1,8 @@
+interface FootballScore {
+  home: number | null;
+  away: number | null;
+}
+
 export interface FootballDataMatch {
   id: number;
   utcDate: string;
@@ -23,10 +28,10 @@ export interface FootballDataMatch {
     crest?: string;
   };
   score: {
-    fullTime: {
-      home: number | null;
-      away: number | null;
-    };
+    fullTime: FootballScore;
+    regularTime: FootballScore | undefined;
+    extraTime: FootballScore | undefined;
+    penalties: FootballScore | undefined;
   };
 }
 
